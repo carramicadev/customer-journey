@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { ThemeModeScript } from "flowbite-react";
 import "./globals.css";
 import { CategoriesProvider } from "@/context/CategoriesContext";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,7 +23,9 @@ export default function RootLayout({
         <ThemeModeScript />
       </head>
       <CategoriesProvider>
-        <body className={inter.className}>{children}</body>
+        <Suspense>
+          <body className={inter.className}>{children}</body>
+        </Suspense>
       </CategoriesProvider>
     </html>
   );
