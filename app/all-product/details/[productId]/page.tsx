@@ -98,26 +98,6 @@ const ProductPage: React.FC = () => {
       // fetchData();
     }
   }, [product?.category?.id, params.productId]);
-  //   const product: Product = {
-  //     name: "Carramica Imperial Forest",
-  //     price: 399000,
-  //     material: "Porcelain",
-  //     includes: ["1x Boovi", "2x Mug", "3x Dinner Plate"],
-  //     description: "Comes with box, hang tags, and free gift card.",
-  //     images: [
-  //       "/product-images/product.webp",
-  //       "/product-images/product.webp",
-  //       "/product-images/product.webp",
-  //       "/product-images/product.webp",
-  //       "/product-images/product.webp",
-  //     ],
-  //     thumbnails: [
-  //       "https://via.placeholder.com/100",
-  //       "https://via.placeholder.com/100?text=Thumb+2",
-  //       "https://via.placeholder.com/100?text=Thumb+3",
-  //       "https://via.placeholder.com/100?text=Thumb+4",
-  //     ],
-  //   };
 
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity >= 1) {
