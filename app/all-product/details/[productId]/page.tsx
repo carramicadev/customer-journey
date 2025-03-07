@@ -130,8 +130,8 @@ const ProductPage: React.FC = () => {
                 activeIndex: React.SetStateAction<number>;
               }) => setActiveThumbIndex(swiper.activeIndex)} // Update active thumbnail on slide change
             >
-              {product?.thumbnail?.length > 0 ? (
-                product?.thumbnail.map((image, index) => (
+              {product?.thumbnail && product.thumbnail.length > 0 ? (
+                product.thumbnail.map((image, index) => (
                   <SwiperSlide key={index}>
                     <img
                       src={image ?? "/product-images/product.webp"}
@@ -182,7 +182,9 @@ const ProductPage: React.FC = () => {
           {/* Product Details Section */}
           <div className="space-y-6">
             <h1 className="text-3xl font-bold">{product?.nama}</h1>
-            <p className="text-xl text-gray-700">{currency(product?.harga)}</p>
+            <p className="text-xl text-gray-700">
+              {currency(product?.harga ?? 0)}
+            </p>
 
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
@@ -246,7 +248,7 @@ const ProductPage: React.FC = () => {
                 <p className="mt-2 text-lg font-semibold">
                   {relatedProduct.nama}
                 </p>
-                <p className="text-gray-700">{currency(product?.harga)}</p>
+                <p className="text-gray-700">{currency(product?.harga ?? 0)}</p>
               </div>
             ))}
           </div>
