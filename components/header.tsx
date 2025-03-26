@@ -82,7 +82,10 @@ export default function Header({
           </a>
         </div>
         {pathname === "/all-product" && (
-          <form className="mx-auto ml-4 mr-4 max-w-md" style={{ padding: 0 }}>
+          <form
+            className="mx-auto ml-4 mr-4 max-w-md md:hidden"
+            style={{ padding: 0 }}
+          >
             <label
               htmlFor="default-search"
               className="sr-only mb-2 text-sm font-medium text-gray-900 dark:text-white"
