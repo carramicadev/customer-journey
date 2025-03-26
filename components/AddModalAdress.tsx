@@ -106,7 +106,7 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
           try {
             const result = await helloWorld({ value: query });
             // console.log(result.data?.items?.areas)
-            setResults(result?.data?.items?.areas as AreaResult[]);
+            setResults((result?.data as any)?.items?.areas ?? []);
           } catch (error) {
             console.error("Error calling function:", error);
             setResults([]);

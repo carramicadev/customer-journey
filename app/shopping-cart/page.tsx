@@ -653,7 +653,7 @@ const CheckoutPage: React.FC = () => {
         // Update state with results
         setListService({
           ...listService,
-          [currentOrder]: result.data?.items?.pricing,
+          [currentOrder]: (result as any)?.data?.items?.pricing,
         });
       } catch (error) {
         console.error("Error fetching shipping rates:", error);
@@ -817,7 +817,8 @@ const CheckoutPage: React.FC = () => {
         const result = await createTransaction(transactionData);
 
         // 3. Set Snap token
-        setSnapToken((result?.data?.items as any)?.token);
+        setSnapToken((result as any)?.data?.items?.token);
+
         const docRef = doc(
           firestore,
           "customer",
@@ -828,12 +829,13 @@ const CheckoutPage: React.FC = () => {
         await setDoc(
           docRef,
           {
-            midtrans: result?.data?.items,
+            midtrans: (result as any)?.data?.items,
           },
           { merge: true },
         );
         setLoadingCheckout(false);
-        window.snap.pay(result?.data?.items?.token, {
+        const token = (result as any)?.data?.items?.token;
+        window.snap.pay(token, {
           async onSuccess(result: any) {
             console.log("Payment success:", result);
             const orderId = result?.order_id?.split("_")?.[3];
