@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <>
       <Example />
-      <div className="container mx-auto px-2 pt-28">
+      <div className="container mx-auto mb-12 px-2 pt-28">
         {/* <Category /> */}
         <Product />
         <main className="flex min-h-screen items-center justify-center gap-2 dark:bg-gray-800">

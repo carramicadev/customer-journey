@@ -8,31 +8,51 @@ import "swiper/css/thumbs";
 import Header from "@/components/header";
 import { useParams } from "@/node_modules/next/navigation";
 import {
+  addDoc,
+  arrayUnion,
   collection,
   doc,
+  getDocs,
   limit,
   onSnapshot,
+  orderBy,
   query,
+  serverTimestamp,
+  setDoc,
   where,
 } from "firebase/firestore";
 import { firestore } from "@/components/FirebaseFrovider";
 import { Product } from "../../page";
 import { currency } from "@/utils/formatter";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { InformationCircleIcon } from "@heroicons/react/20/solid";
+import ModalConfirm from "@/components/ConfirmModal";
+import Loader from "@/components/AppLoading";
 
 const ProductPage: React.FC = () => {
   const params = useParams<{ productId: string; item: string }>();
-  console.log(params);
+  const searchParams = useSearchParams();
+
+  const orderIndex = searchParams.get("orderIndex");
+  const orderId = searchParams.get("orderId");
+
+  console.log(params.productId);
   const [quantity, setQuantity] = useState<number>(1);
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [activeThumbIndex, setActiveThumbIndex] = useState<number>(0); // Track active thumbnail index
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [product, setProduct] = useState<Product>();
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [showModal, setShowModal] = useState<boolean>(false);
 
+  const router = useRouter();
+  const { user } = useAuth();
   useEffect(() => {
     if (!params?.productId) return;
 
-    const docRef = doc(firestore, "product", params.productId);
+    const docRef = doc(firestore, "product", params?.productId);
 
     const unsubscribe = onSnapshot(
       docRef,
@@ -59,7 +79,7 @@ const ProductPage: React.FC = () => {
             warning_stock: data.warning_stock ?? 0,
             thumbnail: data.thumbnail ?? [],
           };
-
+          console.log(product);
           setProduct(product);
         } else {
           setProduct(undefined);
@@ -93,6 +113,7 @@ const ProductPage: React.FC = () => {
         }));
         setRelatedProducts(updatedData as Product[]); // Update the state with the new data
       });
+      setLoading(false);
       return () => unsubscribe();
       // };
       // fetchData();
@@ -105,18 +126,138 @@ const ProductPage: React.FC = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    alert(`Added ${quantity} ${product?.nama}(s) to cart!`);
+  const handleAddToCart = async (type: string) => {
+    if (user) {
+      if (orderId) {
+        const newData = {
+          name: product?.nama,
+          quantity: quantity,
+          price: product?.harga,
+          id: product?.id,
+          imageUrl: product?.thumbnail?.[0] ?? "/product-images/product.webp",
+          stok: product?.stok,
+          sku: product?.sku,
+          weight: product?.weight,
+          height: product?.height,
+          width: product?.width,
+          length: product?.length,
+        };
+        console.log(newData);
+        await setDoc(
+          doc(firestore, "shopping-cart", user?.uid, "orders", orderId),
+          {
+            products: arrayUnion(newData),
+          },
+          { merge: true },
+        );
+      } else {
+        const collectionRef = collection(
+          firestore,
+          "shopping-cart",
+          user?.uid,
+          "orders",
+        );
+
+        // Get all documents in the collection
+        const querySnapshot = await getDocs(collectionRef);
+
+        // Get the number of documents
+        const count = querySnapshot.size;
+        if (count > 0) {
+          const q = query(collectionRef, orderBy("createdAt", "asc"), limit(1));
+
+          // Execute the query
+          const querySnapshot = await getDocs(q);
+
+          // Check if a document exists
+          if (!querySnapshot.empty) {
+            const docs = querySnapshot.docs[0];
+            const newData = {
+              name: product?.nama,
+              quantity: quantity,
+              price: product?.harga,
+              id: product?.id,
+              imageUrl:
+                product?.thumbnail?.[0] ?? "/product-images/product.webp",
+              stok: product?.stok,
+              sku: product?.sku,
+              weight: product?.weight,
+              height: product?.height,
+              width: product?.width,
+              length: product?.length,
+            };
+            console.log(newData);
+            await setDoc(
+              doc(firestore, "shopping-cart", user?.uid, "orders", docs.id),
+              {
+                products: arrayUnion(newData),
+              },
+              { merge: true },
+            );
+          } else {
+            console.log("No documents found.");
+          }
+        } else {
+          const tambahProduk = await addDoc(collectionRef, {
+            //    ...formData,
+            products: [
+              {
+                name: product?.nama,
+                quantity: quantity,
+                price: product?.harga,
+                id: product?.id,
+                imageUrl: product?.thumbnail?.[0],
+                stok: product?.stok,
+                sku: product?.sku,
+                weight: product?.weight,
+                height: product?.height,
+                width: product?.width,
+                length: product?.length,
+              },
+            ],
+            createdAt: serverTimestamp(),
+          });
+        }
+      }
+
+      // alert(`Added ${quantity} ${product?.nama}(s) to cart!`);
+      if (type === "buy") {
+        router.push("/shopping-cart");
+      } else {
+        setShowModal(true);
+      }
+    } else {
+      router.push("/login");
+    }
   };
 
   const handleThumbClick = (index: number) => {
     setActiveThumbIndex(index); // Update active thumbnail index
   };
 
+  //   modal confirm
+  const handleContinueShopping = () => {
+    setShowModal(false);
+    let path = "/all-product";
+    if (orderId && orderIndex) {
+      path = `/all-product?orderIndex=${orderIndex}${orderId && `&&orderId=${orderId}`}`;
+    }
+    router.push(path);
+    // Add logic for continuing shopping
+  };
+
+  const handleGoToCart = () => {
+    setShowModal(false);
+    // Add logic for navigating to cart
+  };
+  console.log(product);
+  if (loading) {
+    return <Loader size="md" color="green" />;
+  }
   return (
     <>
       <Header />
-      <div className="container mx-auto px-2 pt-28">
+      <div className="container mx-auto mb-20 px-2 pt-28">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           {/* Product Image Section */}
           <div className="rounded-lg bg-gray-100 p-8">
@@ -198,6 +339,7 @@ const ProductPage: React.FC = () => {
                   </button>
                   <span className="px-4 py-2">{quantity}</span>
                   <button
+                    disabled={quantity >= product?.stok}
                     className="bg-gray-200 px-4 py-2 hover:bg-gray-300"
                     onClick={() => handleQuantityChange(quantity + 1)}
                   >
@@ -208,13 +350,13 @@ const ProductPage: React.FC = () => {
 
               <button
                 className="w-full rounded-lg border-2 border-green-600 py-2 text-green-600 transition-colors duration-300 hover:bg-green-100 hover:text-white"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart("add-to-cart")}
               >
                 Add to Cart
               </button>
               <button
                 className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
-                onClick={handleAddToCart}
+                onClick={() => handleAddToCart("buy")}
               >
                 Buy Now
               </button>
@@ -254,6 +396,29 @@ const ProductPage: React.FC = () => {
           </div>
         </div>
       </div>
+      {showModal && (
+        <ModalConfirm
+          product={{
+            name: product?.nama ?? "",
+            quantity: quantity ?? 0,
+            price: product?.harga ?? 0,
+            id: product?.id ?? "",
+            imageUrl: product?.thumbnail?.[0] ?? "/product-images/product.webp",
+            stok: product?.stok ?? 0,
+          }}
+          onContinueShopping={handleContinueShopping}
+          onGoToCart={handleGoToCart}
+        />
+      )}
+      {orderIndex && (
+        <button
+          style={{ zIndex: 9999 }}
+          className="z-9000000 fixed bottom-0 left-0 m-4 flex rounded-md bg-green-600 px-4 py-2 text-white shadow-lg hover:bg-green-700"
+        >
+          <InformationCircleIcon className="mr-4 h-6 w-6 text-white dark:text-white" />
+          {` Tambah product untuk order ${orderIndex}`}
+        </button>
+      )}
     </>
   );
 };

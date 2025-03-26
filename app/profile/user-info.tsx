@@ -1,40 +1,121 @@
 "use client";
-import React, { useState } from "react";
+import Loader from "@/components/AppLoading";
+import { firestore } from "@/components/FirebaseFrovider";
+import { useAuth } from "@/context/AuthContext";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css"; // Import the styles
 
 interface User {
-  name: string;
+  senderName: string;
   email: string;
-  phone: string;
+  senderPhone: string;
   address: string;
 }
 
 const UserInfoPage: React.FC = () => {
-  const [user, setUser] = useState<User>({
-    name: "John Doe",
-    email: "johndoe@example.com",
-    phone: "+62 823 7647 4634",
-    address: "Permata Hijau 2, Blok B 82",
+  const [userInfo, setUserInfo] = useState<User>({
+    senderName: "",
+    email: "",
+    senderPhone: "",
+    address: "",
   });
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Track loading state
 
+  useEffect(() => {
+    if (user?.uid) {
+      const fetchUserData = async () => {
+        setIsLoading(true);
+        const userDocRef = doc(firestore, "customer", user?.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+          setUserInfo(userData); // Update state with fetched data
+        } else {
+          setIsEditing(true);
+          console.log("No user data found in Firestore.");
+        }
+
+        setIsLoading(false);
+      };
+
+      fetchUserData();
+    }
+  }, [user?.uid]);
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({}); // Track validation errors
 
+  // Handle input change for standard fields
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUser((prevUser) => ({
+    setUserInfo((prevUser) => ({
       ...prevUser,
       [name]: value,
     }));
+
+    // Clear the error for the field when the userInfo starts typing
+    if (errors[name]) {
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: "" }));
+    }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you can add logic to save the updated user info to your backend
-    console.log("Updated User Info:", user);
+  // Handle phone input change
+  const handlePhoneChange = (value: string) => {
+    setUserInfo((prevUser) => ({
+      ...prevUser,
+      senderPhone: value, // Add the "+" prefix
+    }));
+
+    // Clear the phone error when the userInfo starts typing
+    if (errors.senderPhone) {
+      setErrors((prevErrors) => ({ ...prevErrors, senderPhone: "" }));
+    }
   };
 
+  // Validate the form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!userInfo.senderName) newErrors.senderName = "Name is required.";
+    // if (!userInfo.email) newErrors.email = "Email is required.";
+    if (!userInfo.senderPhone) newErrors.senderPhone = "Phone is required.";
+    if (!userInfo.address) newErrors.address = "Address is required.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // Return true if no errors
+  };
+
+  // Handle save
+  const handleSave = async () => {
+    if (!validateForm()) return; // Exit if validation fails
+
+    if (!user?.uid) return; // Exit if user is not authenticated
+
+    setIsLoading(true);
+    const userDocRef = doc(firestore, "customer", user?.uid);
+
+    try {
+      await setDoc(userDocRef, userInfo, { merge: true }); // Update Firestore document
+      console.log("User data saved to Firestore.");
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving user data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  //   console.l
+  //   useEffect(()=>{
+  //       if(!)
+  //   })
+  if (isLoading) {
+    return <Loader size="md" color="green" />;
+  }
   return (
-    // <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-    <div className="max-w w-full ">
+    <div className="max-w w-full">
       <div className="space-y-4">
         {/* Name Field */}
         <div>
@@ -42,15 +123,20 @@ const UserInfoPage: React.FC = () => {
             Name
           </label>
           {isEditing ? (
-            <input
-              type="text"
-              name="name"
-              value={user.name}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <>
+              <input
+                type="text"
+                name="senderName"
+                value={userInfo.senderName}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+              {errors.senderName && (
+                <p className="mt-1 text-sm text-red-600">{errors.senderName}</p>
+              )}
+            </>
           ) : (
-            <p className="mt-1 text-gray-900">{user.name}</p>
+            <p className="mt-1 text-gray-900">{userInfo.senderName}</p>
           )}
         </div>
 
@@ -60,15 +146,17 @@ const UserInfoPage: React.FC = () => {
             Email
           </label>
           {isEditing ? (
-            <input
-              type="email"
-              name="email"
-              value={user.email}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <>
+              <input
+                type="email"
+                name="email"
+                value={userInfo.email}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+            </>
           ) : (
-            <p className="mt-1 text-gray-900">{user.email}</p>
+            <p className="mt-1 text-gray-900">{userInfo.email}</p>
           )}
         </div>
 
@@ -78,15 +166,24 @@ const UserInfoPage: React.FC = () => {
             Phone
           </label>
           {isEditing ? (
-            <input
-              type="tel"
-              name="phone"
-              value={user.phone}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <>
+              <PhoneInput
+                inputClass="input"
+                inputStyle={{ width: "100%" }}
+                country={"id"} // Set a default country
+                value={userInfo.senderPhone.replace("+", "")} // Remove the "+" prefix for the library
+                onChange={handlePhoneChange}
+                enableSearch={true} // Enable search in the country dropdown
+                placeholder="Enter phone number"
+              />
+              {errors.senderPhone && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.senderPhone}
+                </p>
+              )}
+            </>
           ) : (
-            <p className="mt-1 text-gray-900">{user.phone}</p>
+            <p className="mt-1 text-gray-900">{userInfo.senderPhone}</p>
           )}
         </div>
 
@@ -96,15 +193,20 @@ const UserInfoPage: React.FC = () => {
             Address
           </label>
           {isEditing ? (
-            <input
-              type="text"
-              name="address"
-              value={user.address}
-              onChange={handleInputChange}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-            />
+            <>
+              <input
+                type="text"
+                name="address"
+                value={userInfo.address}
+                onChange={handleInputChange}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+              />
+              {errors.address && (
+                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+              )}
+            </>
           ) : (
-            <p className="mt-1 text-gray-900">{user.address}</p>
+            <p className="mt-1 text-gray-900">{userInfo.address}</p>
           )}
         </div>
       </div>
@@ -114,21 +216,20 @@ const UserInfoPage: React.FC = () => {
         {isEditing ? (
           <button
             onClick={handleSave}
-            className="w-full rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700"
+            className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
           >
             Save
           </button>
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700"
+            className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
           >
             Edit
           </button>
         )}
       </div>
     </div>
-    // </div>
   );
 };
 

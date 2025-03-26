@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "../../components/header";
 // import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import {
@@ -11,32 +11,106 @@ import {
 } from "@heroicons/react/24/outline";
 import UserInfoPage from "./user-info";
 import AddressDataPage from "./address";
-interface Order {
+import { signOut } from "firebase/auth";
+import { auth, firestore } from "@/components/FirebaseFrovider";
+import { useRouter } from "next/navigation";
+import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
+interface Coordinate {
+  lat: number;
+  lng: number;
+}
+
+interface Product {
+  sku: string;
+  weight: number;
+  quantity: number;
+  length: number;
+  imageUrl: string;
+  price: number;
   id: string;
-  customerName: string;
-  phoneNumber: string;
-  courier: string;
+  width: number;
+  stok: number;
+  name: string;
+  height: number;
+}
+
+interface Recipient {
+  koordinateReceiver: Coordinate;
+  receiverPhone: string;
+  postalCode: number;
+  receiverName: string;
+  district: string;
   address: string;
-  items: string[];
-  invoiceLink: string;
+  id: string;
+}
+
+interface Order {
+  listService: any[];
+  dataCourier: any;
+  courier: string;
+  deliveryFee: number;
+  id: string;
+  products: Product[];
+  isEditing: boolean;
+  dataComplete: boolean;
+  createdAt: any;
+  recipient: Recipient;
+  giftCardMessage?: string;
+}
+
+interface Sender {
+  senderName: string;
+  email: string;
+  address: string;
+  senderPhone: string;
+}
+
+interface MidtransInfo {
+  token: string;
+  redirect_url: string;
+}
+
+interface OrderGroup {
+  id: string;
+  orders: Order[];
+  sender: Sender;
+  createdAt: any;
+  paymentStatus: string;
+  midtrans: MidtransInfo;
+  deliveryFee: number;
 }
 
 const OrderHistoryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Order History");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // State for mobile sidebar toggle
 
-  const orders: Order[] = [
-    {
-      id: "12345",
-      customerName: "Ralsha",
-      phoneNumber: "+62 82376474634",
-      courier: "Lalamove bike",
-      address: "Permata hijau 2 blok B 82",
-      items: ["3 x Imperial Forest", "3 x Nestling"],
-      invoiceLink: "#",
-    },
-    // Add more orders here
-  ];
+  const [orders, setOrders] = useState<OrderGroup[]>([]);
+
+  // get history orders
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.uid) {
+      // setIsLoading(true);
+      // const fetchData = async () => {
+      const getDoc = collection(firestore, "customer", user?.uid, "orders");
+      // const documentSnapshots = await getDocs(getDoc);
+      const unsubscribe = onSnapshot(getDoc, (snapshot) => {
+        const updatedData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          deliveryFee: doc.data()?.deliveryFee ?? 0,
+        }));
+        console.log(updatedData);
+        setOrders(updatedData as OrderGroup[]);
+      });
+      // setIsLoading(false);
+      return () => unsubscribe();
+      // };
+      // fetchData();
+    }
+  }, [user?.uid]);
 
   const tabs = [
     { name: "Order History", icon: ClipboardDocumentListIcon },
@@ -44,6 +118,69 @@ const OrderHistoryPage: React.FC = () => {
     { name: "Address Data", icon: MapPinIcon },
     { name: "Logout", icon: ArrowLeftOnRectangleIcon },
   ];
+
+  // payment
+  const handlePayment = async (token: string) => {
+    if (!token) {
+      alert("Token not found");
+      return;
+    }
+
+    try {
+      window.snap.pay(token, {
+        async onSuccess(result: any) {
+          console.log("Payment success:", result);
+          const orderId = result?.order_id?.split("_")?.[3];
+          // Update payment status in Firestore
+          const orderRef = doc(
+            firestore,
+            `customer/${user?.uid}/orders/${orderId}`,
+          );
+
+          await updateDoc(orderRef, {
+            paymentStatus: result?.transaction_status,
+            // updatedAt: new Date(), // Optional: add update timestamp
+            midtransRes: result, // Optional: store payment details
+          });
+
+          alert("Payment successful!");
+          // handleDeleteOrders(); // Uncomment if needed
+          // setOrders([]); // Uncomment if needed
+        },
+        onError(error: any) {
+          console.error("Payment failed:", error);
+          alert("Payment failed. Please try again.");
+        },
+        onClose() {
+          console.log("Popup closed");
+        },
+      });
+    } catch (error) {
+      console.error("Payment processing error:", error);
+      alert("An error occurred during payment.");
+    }
+  };
+
+  //   logout
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out the user
+      console.log("User logged out successfully.");
+      router.replace("/");
+      // Redirect or update UI after logout
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
+  // useEffect(() => {
+  //   if (!user?.uid) {
+  //     router.replace("/login");
+  //   }
+  // }, [user]);
+
   return (
     <>
       <Header />
@@ -73,7 +210,7 @@ const OrderHistoryPage: React.FC = () => {
                       <button
                         className={`flex w-full items-center space-x-3 px-6 py-3 text-left hover:bg-gray-200 ${
                           activeTab === tab.name
-                            ? "bg-blue-100 text-blue-600"
+                            ? "bg-green-100 text-green-600"
                             : "text-gray-700"
                         }`}
                         onClick={() => {
@@ -110,34 +247,77 @@ const OrderHistoryPage: React.FC = () => {
                     key={order.id}
                     className="rounded-lg bg-white p-6 shadow-md"
                   >
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                      <div>
-                        <p className="text-lg font-semibold">
-                          Order ID: {order.id}
-                        </p>
-                        <p className="text-gray-600">
-                          {order.customerName} | {order.phoneNumber}
-                        </p>
-                        <p className="text-gray-600">
-                          Courier: {order.courier}
-                        </p>
+                    <div className="">
+                      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div>
+                          <p className="text-lg font-semibold">
+                            Order ID: {order.id}
+                          </p>
+                          <p>Data Pengirim</p>
+                          <p className="text-gray-600">
+                            {order.sender?.senderName} |{" "}
+                            {order.sender?.senderPhone}
+                          </p>
+                        </div>
+                        <div className=" flex items-center">
+                          <p>Status Pembayaran:</p>
+                          <p
+                            className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-green-800" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
+                          >
+                            {order?.paymentStatus}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-600">Delivery Address:</p>
-                        <p className="text-gray-800">{order.address}</p>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        {order?.orders?.map((ord, idx) => {
+                          return (
+                            <div
+                              className={`${order?.paymentStatus === "settlement" ? "rounded-lg bg-green-100 p-6 shadow-md" : "rounded-lg bg-red-100 p-6 shadow-md"}`}
+                              // className="rounded-lg bg-green-100 p-6 shadow-md"
+                            >
+                              <p>Orderan {idx + 1}</p>
+                              <div>
+                                <p className="text-gray-600">
+                                  Delivery Address:
+                                </p>
+                                <p className="text-gray-800">
+                                  {ord.recipient?.address}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">
+                                  Courier: {ord?.courier}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-gray-600">Items:</p>
+                                <ul className="list-inside list-disc text-gray-800">
+                                  {ord.products.map((item, index) => (
+                                    <li key={index}>
+                                      {item?.name} x {item?.quantity}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div>
-                        <p className="text-gray-600">Items:</p>
-                        <ul className="list-inside list-disc text-gray-800">
-                          {order.items.map((item, index) => (
-                            <li key={index}>{item}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <button className="mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
+                      <div className="flex justify-between">
+                        <button className="mr-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
                           Download Invoice
                         </button>
+                        {order?.paymentStatus === "pending" &&
+                          order?.midtrans?.token && (
+                            <button
+                              onClick={() =>
+                                handlePayment(order?.midtrans?.token)
+                              }
+                              className="ml-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600"
+                            >
+                              Bayar sekarang
+                            </button>
+                          )}
                       </div>
                     </div>
                     {/* <div className="mt-4">
@@ -173,7 +353,10 @@ const OrderHistoryPage: React.FC = () => {
             {activeTab === "Logout" && (
               <div className="rounded-lg bg-white p-6 shadow-md">
                 <p>Are you sure you want to log out?</p>
-                <button className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700">
+                <button
+                  onClick={handleLogout}
+                  className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                >
                   Logout
                 </button>
               </div>

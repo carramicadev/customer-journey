@@ -1,3 +1,4 @@
+import Loader from "@/components/AppLoading";
 import { firestore } from "@/components/FirebaseFrovider";
 import { useCategories } from "@/context/CategoriesContext";
 import { currency } from "@/utils/formatter";
@@ -12,10 +13,12 @@ export default function Example() {
   }>({});
 
   const { categories, loading, error } = useCategories();
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Track loading state
 
   // Fetch products for each category (maximum 4 products per category)
   useEffect(() => {
     const fetchProductsForCategories = async () => {
+      setIsLoading(true);
       const productsData: { [key: string]: Product[] } = {};
 
       for (const category of categories) {
@@ -37,6 +40,7 @@ export default function Example() {
       }
 
       setProductsByCategory(productsData);
+      setIsLoading(false);
     };
 
     if (categories.length > 0) {
@@ -48,8 +52,11 @@ export default function Example() {
     (category) => productsByCategory[category.id]?.length > 0,
   );
   console.log(productsByCategory);
+  if (loading || isLoading) {
+    return <Loader size="md" color="green" />;
+  }
   return (
-    <div className="bg-white">
+    <div className="lh-10 mt-6 bg-white">
       {categoriesWithProducts.map((categ) => {
         return (
           <div key={categ.id}>
@@ -58,8 +65,8 @@ export default function Example() {
                 className="w-full rounded-lg"
                 src={categ?.thumbnail}
                 alt=""
-                width={1310}
-                height={873}
+                // width={1310}
+                // height={873}
               />
             </div>
             <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">

@@ -8,7 +8,11 @@ const config: Config = {
     "./node_modules/flowbite-react/**/*.js", // ✅ Correct Flowbite import
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        "spin-slow": "spin 3s linear infinite",
+      },
+    },
   },
   plugins: [require("flowbite/plugin")], // ✅ Correct Flowbite plugin import
 };

@@ -4,6 +4,7 @@ import { ThemeModeScript } from "flowbite-react";
 import "./globals.css";
 import { CategoriesProvider } from "@/context/CategoriesContext";
 import { Suspense } from "react";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,12 +22,19 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <ThemeModeScript />
+        <script
+          src="https://app.sandbox.midtrans.com/snap/snap.js"
+          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+          async
+        />
       </head>
-      <CategoriesProvider>
-        <Suspense>
-          <body className={inter.className}>{children}</body>
-        </Suspense>
-      </CategoriesProvider>
+      <AuthProvider>
+        <CategoriesProvider>
+          <Suspense>
+            <body className={inter.className}>{children}</body>
+          </Suspense>
+        </CategoriesProvider>
+      </AuthProvider>
     </html>
   );
 }
