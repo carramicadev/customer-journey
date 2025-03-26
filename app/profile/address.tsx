@@ -96,7 +96,7 @@ const AddressDataPage: React.FC = () => {
         onClick={handleAddNew}
         className="mb-6 w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
       >
-        Add New Address
+        Tambah Alamat Baru
       </button>
 
       {/* Address List */}
@@ -124,7 +124,7 @@ const AddressDataPage: React.FC = () => {
                   onClick={() => handleDelete(address.id)}
                   className="text-red-600 hover:text-red-800"
                 >
-                  Delete
+                  Hapus
                 </button>
               </div>
             </div>

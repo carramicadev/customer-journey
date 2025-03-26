@@ -242,86 +242,87 @@ const OrderHistoryPage: React.FC = () => {
 
             {activeTab === "Order History" && (
               <div className="space-y-6">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="rounded-lg bg-white p-6 shadow-md"
-                  >
-                    <div className="">
-                      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                        <div>
-                          <p className="text-lg font-semibold">
-                            Order ID: {order.id}
-                          </p>
-                          <p>Data Pengirim</p>
-                          <p className="text-gray-600">
-                            {order.sender?.senderName} |{" "}
-                            {order.sender?.senderPhone}
-                          </p>
-                        </div>
-                        <div className=" flex items-center">
-                          <p>Status Pembayaran:</p>
-                          <p
-                            className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-green-800" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
-                          >
-                            {order?.paymentStatus}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {order?.orders?.map((ord, idx) => {
-                          return (
-                            <div
-                              key={idx}
-                              className={`${order?.paymentStatus === "settlement" ? "rounded-lg bg-green-100 p-6 shadow-md" : "rounded-lg bg-red-100 p-6 shadow-md"}`}
-                              // className="rounded-lg bg-green-100 p-6 shadow-md"
+                {orders.length > 0 ? (
+                  orders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="rounded-lg bg-white p-6 shadow-md"
+                    >
+                      <div className="">
+                        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div>
+                            <p className="text-lg font-semibold">
+                              Order ID: {order.id}
+                            </p>
+                            <p>Data Pengirim</p>
+                            <p className="text-gray-600">
+                              {order.sender?.senderName} |{" "}
+                              {order.sender?.senderPhone}
+                            </p>
+                          </div>
+                          <div className=" flex items-center">
+                            <p>Status Pembayaran:</p>
+                            <p
+                              className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-green-800" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
                             >
-                              <p>Orderan {idx + 1}</p>
-                              <div>
-                                <p className="text-gray-600">
-                                  Delivery Address:
-                                </p>
-                                <p className="text-gray-800">
-                                  {ord.recipient?.address}
-                                </p>
+                              {order?.paymentStatus}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          {order?.orders?.map((ord, idx) => {
+                            return (
+                              <div
+                                key={idx}
+                                className={`${order?.paymentStatus === "settlement" ? "rounded-lg bg-green-100 p-6 shadow-md" : "rounded-lg bg-red-100 p-6 shadow-md"}`}
+                                // className="rounded-lg bg-green-100 p-6 shadow-md"
+                              >
+                                <p>Orderan {idx + 1}</p>
+                                <div>
+                                  <p className="text-gray-600">
+                                    Delivery Address:
+                                  </p>
+                                  <p className="text-gray-800">
+                                    {ord.recipient?.address}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">
+                                    Courier: {ord?.courier}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-600">Items:</p>
+                                  <ul className="list-inside list-disc text-gray-800">
+                                    {ord.products.map((item, index) => (
+                                      <li key={index}>
+                                        {item?.name} x {item?.quantity}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-gray-600">
-                                  Courier: {ord?.courier}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-gray-600">Items:</p>
-                                <ul className="list-inside list-disc text-gray-800">
-                                  {ord.products.map((item, index) => (
-                                    <li key={index}>
-                                      {item?.name} x {item?.quantity}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between">
+                          <button className="mr-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
+                            Download Invoice
+                          </button>
+                          {order?.paymentStatus === "pending" &&
+                            order?.midtrans?.token && (
+                              <button
+                                onClick={() =>
+                                  handlePayment(order?.midtrans?.token)
+                                }
+                                className="ml-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600"
+                              >
+                                Bayar sekarang
+                              </button>
+                            )}
+                        </div>
                       </div>
-                      <div className="flex justify-between">
-                        <button className="mr-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
-                          Download Invoice
-                        </button>
-                        {order?.paymentStatus === "pending" &&
-                          order?.midtrans?.token && (
-                            <button
-                              onClick={() =>
-                                handlePayment(order?.midtrans?.token)
-                              }
-                              className="ml-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600"
-                            >
-                              Bayar sekarang
-                            </button>
-                          )}
-                      </div>
-                    </div>
-                    {/* <div className="mt-4">
+                      {/* <div className="mt-4">
                       <p className="text-gray-600">Items:</p>
                       <ul className="list-inside list-disc text-gray-800">
                         {order.items.map((item, index) => (
@@ -334,8 +335,37 @@ const OrderHistoryPage: React.FC = () => {
                         Download Invoice
                       </button>
                     </div> */}
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex  flex-col items-center justify-center bg-gray-50">
+                    {/* Icon */}
+                    <svg
+                      className="mb-4 h-16 w-16 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      ></path>
+                    </svg>
+
+                    {/* Message */}
+                    <h2 className="mb-2 text-xl font-semibold text-gray-800">
+                      No data available
+                    </h2>
+                    <p className="mb-6 text-gray-500">
+                      There is no data to display at the moment.
+                    </p>
+
+                    {/* Call-to-action Button */}
                   </div>
-                ))}
+                )}
               </div>
             )}
 
