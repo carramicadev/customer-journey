@@ -1,5 +1,6 @@
 import Loader from "@/components/AppLoading";
 import { firestore } from "@/components/FirebaseFrovider";
+import Footer from "@/components/footer";
 import { useCategories } from "@/context/CategoriesContext";
 import { currency } from "@/utils/formatter";
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
@@ -122,6 +123,7 @@ export default function Example() {
           </div>
         );
       })}
+      <Footer />
     </div>
   );
 }

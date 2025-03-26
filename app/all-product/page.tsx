@@ -26,6 +26,7 @@ import {
   ChevronRightIcon,
   InformationCircleIcon,
 } from "@heroicons/react/20/solid";
+import Footer from "@/components/footer";
 
 type Timestamp = {
   seconds: number;
@@ -258,6 +259,7 @@ export default function AllProducts() {
           {` Tambah product untuk order ${orderIndex}`}
         </button>
       )}
+      <Footer />
     </>
   );
 }
