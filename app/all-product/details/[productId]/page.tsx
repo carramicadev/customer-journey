@@ -339,7 +339,7 @@ const ProductPage: React.FC = () => {
                   </button>
                   <span className="px-4 py-2">{quantity}</span>
                   <button
-                    disabled={quantity >= product?.stok}
+                    disabled={quantity >= (product?.stok ?? 0)}
                     className="bg-gray-200 px-4 py-2 hover:bg-gray-300"
                     onClick={() => handleQuantityChange(quantity + 1)}
                   >
