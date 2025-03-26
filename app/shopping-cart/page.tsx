@@ -1399,7 +1399,10 @@ const CheckoutPage: React.FC = () => {
                       {listService?.[index]
                         ? listService?.[index]?.map((kur: any) => {
                             return (
-                              <option value={kur?.courier_service_code}>
+                              <option
+                                key={kur?.courier_service_code}
+                                value={kur?.courier_service_code}
+                              >
                                 <span>
                                   {kur?.courier_name},{" "}
                                   {kur?.courier_service_name}, {kur?.duration},
@@ -1411,7 +1414,10 @@ const CheckoutPage: React.FC = () => {
                         : order?.listService
                           ? order?.listService?.map((kur: any) => {
                               return (
-                                <option value={kur?.courier_service_code}>
+                                <option
+                                  key={kur?.courier_service_code}
+                                  value={kur?.courier_service_code}
+                                >
                                   <span>
                                     {kur?.courier_name},{" "}
                                     {kur?.courier_service_name}, {kur?.duration}

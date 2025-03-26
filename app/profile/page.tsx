@@ -272,6 +272,7 @@ const OrderHistoryPage: React.FC = () => {
                         {order?.orders?.map((ord, idx) => {
                           return (
                             <div
+                              key={idx}
                               className={`${order?.paymentStatus === "settlement" ? "rounded-lg bg-green-100 p-6 shadow-md" : "rounded-lg bg-red-100 p-6 shadow-md"}`}
                               // className="rounded-lg bg-green-100 p-6 shadow-md"
                             >
