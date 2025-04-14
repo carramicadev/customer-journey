@@ -12,6 +12,7 @@ import {
   collection,
   doc,
   getDoc,
+  increment,
   onSnapshot,
   serverTimestamp,
   setDoc,
@@ -850,6 +851,24 @@ const CheckoutPage: React.FC = () => {
               // updatedAt: new Date(), // Optional: add update timestamp
               midtransRes: result, // Optional: store payment details
             });
+            await Promise.all(
+              orders.map(async (data) => {
+                await Promise.all(
+                  data.products.map(async (prod) => {
+                    await setDoc(
+                      doc(firestore, `product/${prod.id}`),
+                      {
+                        updatedAt: serverTimestamp(),
+                        stok: increment(-prod.quantity),
+                        qty_sold: increment(prod.quantity),
+                      },
+                      { merge: true },
+                    );
+                  }),
+                );
+              }),
+            );
+
             handleDeleteOrders();
             setOrders([]);
             alert("Payment successful!");

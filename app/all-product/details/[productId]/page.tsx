@@ -198,6 +198,7 @@ const ProductPage: React.FC = () => {
             console.log("No documents found.");
           }
         } else {
+          console.log(product);
           const tambahProduk = await addDoc(collectionRef, {
             //    ...formData,
             products: [
@@ -206,7 +207,8 @@ const ProductPage: React.FC = () => {
                 quantity: quantity,
                 price: product?.harga,
                 id: product?.id,
-                imageUrl: product?.thumbnail?.[0],
+                imageUrl:
+                  product?.thumbnail?.[0] ?? "/product-images/product.webp",
                 stok: product?.stok,
                 sku: product?.sku,
                 weight: product?.weight,
