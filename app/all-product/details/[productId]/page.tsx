@@ -249,6 +249,7 @@ const ProductPage: React.FC = () => {
   };
 
   const handleGoToCart = () => {
+    router.push("/shopping-cart");
     setShowModal(false);
     // Add logic for navigating to cart
   };
@@ -279,7 +280,7 @@ const ProductPage: React.FC = () => {
                     <img
                       src={image ?? "/product-images/product.webp"}
                       alt={`Product ${index + 1}`}
-                      className="w-full rounded-lg"
+                      className=" w-full rounded-lg"
                     />
                   </SwiperSlide>
                 ))
