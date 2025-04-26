@@ -132,7 +132,7 @@ const CheckoutPage: React.FC = () => {
           setIsEditingContactInfo(false);
           false;
         } else {
-          setIsEditing(true);
+          // setIsEditing(true);
           console.log("No user data found in Firestore.");
         }
 
