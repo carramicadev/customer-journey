@@ -1,31 +1,34 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { addDoc, collection, doc, setDoc } from "firebase/firestore";
+
 import React, { useState, useEffect } from "react"; // Add useEffect
 import PhoneInput from "react-phone-input-2";
 import { firestore, functions } from "./FirebaseFrovider";
 import "react-phone-input-2/lib/style.css";
 import MapComponent, { Coordinate } from "./Map/page";
 import { httpsCallable } from "firebase/functions";
+import { ContactInfo } from "@/types/contact-info";
 
 interface Address {
   id: string;
-  receiverName: string;
-  receiverPhone: string;
+  name: string;
+  phone: string;
   address: string;
   district: string;
-  postalCode: number;
-  koordinateReceiver: {
+  postalCode: string;
+  coordinate: {
     lat: number;
     lng: number;
   };
+  type?: "sender" | "receiver" | "both";
 }
 
 interface EditAddressModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentAddress: Address | null;
+  onSave?: (data: ContactInfo) => Promise<void>;
 }
 
 interface AreaResult {
@@ -46,33 +49,51 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   isOpen,
   onClose,
   currentAddress,
+  onSave,
 }) => {
   console.log(currentAddress);
 
   const { user } = useAuth();
   const [formData, setFormData] = useState<Address>({
     id: "",
-    receiverName: "",
-    receiverPhone: "",
+    name: "",
+    phone: "",
     address: "",
     district: "",
-    postalCode: 0,
-    koordinateReceiver: {
+    postalCode: "",
+    coordinate: {
       lat: 0,
       lng: 0,
     },
+    type: "both",
   });
 
   useEffect(() => {
-    if (currentAddress?.id) {
+    if (currentAddress) {
       setFormData(currentAddress);
+    } else {
+      // 🔥 RESET TOTAL FORM SAAT ADD NEW
+      setFormData({
+        id: "",
+        name: "",
+        phone: "",
+        address: "",
+        district: "",
+        postalCode: "",
+        coordinate: {
+          lat: 0,
+          lng: 0,
+        },
+        type: "both",
+      });
     }
-  }, [currentAddress?.id]);
+  }, [currentAddress]);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [koordinateReceiver, setKoordinateReceiver] = useState<Coordinate>({
-    lat: 0,
-    lng: 0,
-  });
+  // const [coordinate, setCoordinate] = useState<Coordinate>({
+  //   lat: 0,
+  //   lng: 0,
+  // });
   // search district/kecamatan
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<AreaResult[]>([]);
@@ -84,16 +105,6 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   ) => {
     const value = e.target.value;
     setQuery(value);
-
-    // Filter results based on the query
-    // if (value) {
-    //   const filteredResults = sampleData.filter((item) =>
-    //     item.name.toLowerCase().includes(value.toLowerCase()),
-    //   );
-    //   setResults(filteredResults);
-    // } else {
-    //   setResults([]);
-    // }
   };
 
   // call getDistrict
@@ -152,17 +163,17 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   const handlePhoneChange = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      receiverPhone: value,
+      phone: value,
     }));
-    if (errors.receiverPhone) {
-      setErrors((prev) => ({ ...prev, receiverPhone: "" }));
+    if (errors.phone) {
+      setErrors((prev) => ({ ...prev, phone: "" }));
     }
   };
 
   const validateForm = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    if (!formData.receiverName) newErrors.receiverName = "Name is required.";
-    if (!formData.receiverPhone) newErrors.receiverPhone = "Phone is required.";
+    if (!formData.name) newErrors.name = "Name is required.";
+    if (!formData.phone) newErrors.phone = "Phone is required.";
     if (!formData.address) newErrors.address = "Address is required.";
     if (!formData.district) newErrors.district = "City is required.";
     if (!formData.postalCode) newErrors.postalCode = "Postal Code is required.";
@@ -171,75 +182,41 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
 
   const validateCoordinate = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    if (!koordinateReceiver.lat || !koordinateReceiver.lng)
-      newErrors.koordinate = "Coordinate is required.";
+    if (!formData.coordinate?.lat || !formData.coordinate?.lng) {
+      newErrors.coordinate = "Coordinate is required.";
+    }
     return newErrors;
   };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form and coordinate
     const formErrors = validateForm();
     const coordinateErrors = validateCoordinate();
+    const combinedErrors = { ...formErrors, ...coordinateErrors };
 
-    // Combine errors (provide fallback empty objects to avoid spread errors)
-    const combinedErrors = {
-      ...(formErrors || {}),
-      ...(coordinateErrors || {}),
-    };
-
-    // Set combined errors
     setErrors(combinedErrors);
+    if (Object.keys(combinedErrors).length > 0) return;
 
-    // Check if there are no errors
-    if (Object.keys(combinedErrors).length === 0) {
-      try {
-        if (!user) throw new Error("User is not authenticated.");
-
-        const addressCollection = collection(
-          firestore,
-          `customer/${user.uid}/address`,
-        );
-
-        if (currentAddress?.id) {
-          // Update existing address
-          const addressDoc = doc(
-            firestore,
-            `customer/${user.uid}/address/${currentAddress.id}`,
-          );
-          await setDoc(
-            addressDoc,
-            { ...formData, koordinateReceiver },
-            { merge: true },
-          );
-        } else {
-          // Add new address
-          const addAddress = await addDoc(addressCollection, formData);
-          const addressDoc = doc(
-            firestore,
-            `customer/${user.uid}/address/${addAddress.id}`,
-          );
-          await setDoc(
-            addressDoc,
-            { ...formData, id: addAddress.id, koordinateReceiver },
-            { merge: true },
-          );
-        }
-
-        onClose(); // Close the modal after saving
-      } catch (error) {
-        console.error("Error saving address to Firestore:", error);
-        alert("An error occurred while saving the address.");
+    try {
+      if (onSave) {
+        await onSave({
+          ...formData,
+          coordinate: formData.coordinate,
+        });
+      } else {
+        console.warn("onSave not provided, skipping callback");
       }
+    } catch (err) {
+      console.error(err);
+      alert("Gagal menyimpan data");
     }
   };
-  // console.log(errors);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="z-50 flex h-[90vh] max-h-[600px] w-full max-w-lg flex-col rounded-lg bg-white shadow-lg">
         {/* Modal Header */}
         <div className="border-b p-6">
@@ -258,16 +235,14 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
               </label>
               <input
                 type="text"
-                name="receiverName"
-                value={formData.receiverName}
+                name="name"
+                value={formData.name}
                 onChange={handleInputChange}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 required
               />
-              {errors.receiverName && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.receiverName}
-                </p>
+              {errors.name && (
+                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
               )}
             </div>
 
@@ -280,15 +255,13 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
                 inputClass="input"
                 inputStyle={{ width: "100%" }}
                 country={"id"}
-                value={formData.receiverPhone.replace("+", "")}
+                value={formData.phone.replace("+", "")}
                 onChange={handlePhoneChange}
                 enableSearch={true}
                 placeholder="Enter phone number"
               />
-              {errors.receiverPhone && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.receiverPhone}
-                </p>
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
               )}
             </div>
 
@@ -342,7 +315,7 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
                     {/* Loader */}
                     {isLoading && (
                       <div className="flex items-center justify-center p-4">
-                        <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-blue-500"></div>
+                        <div className="size-6 animate-spin rounded-full border-b-2 border-blue-500"></div>
                       </div>
                     )}
 
@@ -359,7 +332,7 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
                               setFormData({
                                 ...formData,
                                 district: item?.name,
-                                postalCode: item?.postal_code,
+                                postalCode: String(item?.postal_code),
                               });
                               setErrors({
                                 ...errors,
@@ -404,13 +377,16 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
             {/* Map Component */}
             <div>
               <MapComponent
-                setKoordinateReceiver={setKoordinateReceiver}
-                koordinateReceiver={koordinateReceiver}
-                setErrors={setErrors}
+                setCoordinate={(c) =>
+                  setFormData((p) => ({ ...p, coordinate: c }))
+                }
+                coordinate={formData.coordinate}
                 errors={errors}
+                setErrors={setErrors}
               />
-              {errors.koordinate && (
-                <p className="mt-1 text-sm text-red-600">{errors.koordinate}</p>
+
+              {errors.coordinate && (
+                <p className="mt-1 text-sm text-red-600">{errors.coordinate}</p>
               )}
             </div>
           </div>

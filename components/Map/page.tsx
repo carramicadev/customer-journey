@@ -14,8 +14,8 @@ export interface Coordinate {
 }
 
 interface MyComponentProps {
-  setKoordinateReceiver: (coordinate: Coordinate) => void;
-  koordinateReceiver: Coordinate;
+  setCoordinate: (coordinate: Coordinate) => void;
+  coordinate: Coordinate;
   setErrors: (errors: Record<string, string>) => void;
   errors: Record<string, string>;
 }
@@ -36,8 +36,8 @@ const center: Coordinate = {
 const libraries: "places"[] = ["places"];
 
 const MapComponent: React.FC<MyComponentProps> = ({
-  setKoordinateReceiver,
-  koordinateReceiver,
+  setCoordinate,
+  coordinate,
   setErrors,
   errors,
 }) => {
@@ -64,7 +64,7 @@ const MapComponent: React.FC<MyComponentProps> = ({
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
       setMarker({ lat, lng });
-      setKoordinateReceiver({
+      setCoordinate({
         lat: parseFloat(lat.toFixed(6)),
         lng: parseFloat(lng.toFixed(6)),
       });
@@ -82,7 +82,7 @@ const MapComponent: React.FC<MyComponentProps> = ({
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
         setMarker({ lat, lng });
-        setKoordinateReceiver({
+        setCoordinate({
           lat: parseFloat(lat.toFixed(6)),
           lng: parseFloat(lng.toFixed(6)),
         });
@@ -122,11 +122,11 @@ const MapComponent: React.FC<MyComponentProps> = ({
       >
         {marker && <Marker position={marker} />}
       </GoogleMap>
-      {koordinateReceiver.lat && (
+      {coordinate.lat && (
         <>
-          <div className="input-note">latitude: {koordinateReceiver.lat}</div>
+          <div className="input-note">latitude: {coordinate.lat}</div>
           <div style={{ marginBottom: "20px" }} className="input-note">
-            longitude: {koordinateReceiver.lng}
+            longitude: {coordinate.lng}
           </div>
         </>
       )}

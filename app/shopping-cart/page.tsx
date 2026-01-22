@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 
 // import Header from "@/components/header";
 import Loader from "@/components/AppLoading";
-import EditAddressModal from "@/components/AddModalAdress";
+import EditAddressModal from "@/components/AddModalAddress";
 
 /* ================= COMPONENTS ================= */
 
-import ContactInfoSection from "@/components/shopping-cart/ContactInfoSection";
+import ContactInfoSection from "@/components/shopping-cart/contact-info/ContactInfoSection";
 import OrdersSection from "@/components/shopping-cart/OrdersSection";
 import OrderAccordion from "@/components/shopping-cart/OrderAccordion";
 import PaymentSummary from "@/components/shopping-cart/PaymentSummary";
@@ -52,16 +52,14 @@ const ShoppingCartPage = () => {
   /* ================= CONTACT INFO ================= */
 
   const {
-    contactInfo,
-    errors,
-    isEditingContactInfo,
+    contacts,
+    selectedContact,
+    setSelectedContact,
     contactIsCompleted,
-    loading: loadingContact,
-    onChange,
-    onPhoneChange,
-    onSave,
-    onEdit,
-  } = useContactInfo(user);
+    addContact,
+    deleteContact,
+    saveContact,
+  } = useContactInfo(user?.uid);
 
   /* ================= ORDERS ================= */
 
@@ -109,9 +107,9 @@ const ShoppingCartPage = () => {
 
   const { handleCheckout } = useCheckout(
     user?.uid,
-    contactInfo,
+    selectedContact ?? undefined, // 🔥 INI DATA PENGIRIM
     orders,
-    setOrders, //error
+    setOrders,
   );
 
   /* ================= TOTALS ================= */
@@ -130,10 +128,8 @@ const ShoppingCartPage = () => {
   /* ================= LOADING ================= */
 
   useEffect(() => {
-    if (!loadingContact) {
-      setIsLoading(false);
-    }
-  }, [loadingContact, setIsLoading]);
+    setIsLoading(false);
+  }, []);
 
   if (isLoading) {
     return <Loader size="md" color="green" />;
@@ -146,22 +142,20 @@ const ShoppingCartPage = () => {
       {/* <Header /> */}
 
       <div className="container mx-auto px-2 pt-12">
-        <h1 className="mb-6 mt-6 text-center text-2xl font-bold md:text-left">
-          Daftar Orderan
+        <h1 className="my-6 text-center text-2xl font-bold md:text-left">
+          Form Order Hampers
         </h1>
 
         <div className="flex flex-col gap-6 lg:flex-row">
           {/* ================= LEFT ================= */}
-          <div className="lg:w-2/3">
+          <div className="lg:w-1/2">
             <ContactInfoSection
-              contactInfo={contactInfo}
-              errors={errors}
-              isEditingContactInfo={isEditingContactInfo}
+              contactInfo={selectedContact}
+              contacts={contacts}
               contactIsCompleted={contactIsCompleted}
-              onChange={onChange}
-              onPhoneChange={onPhoneChange}
-              onSave={onSave}
-              onEdit={onEdit}
+              onSelect={setSelectedContact}
+              onAdd={saveContact}
+              onDelete={deleteContact}
             />
 
             <OrdersSection
@@ -190,7 +184,7 @@ const ShoppingCartPage = () => {
           </div>
 
           {/* ================= RIGHT ================= */}
-          <div className="lg:w-1/3">
+          <div className="lg:w-1/2">
             <OrderAccordion
               orders={orders}
               contactIsCompleted={contactIsCompleted}
@@ -228,6 +222,11 @@ const ShoppingCartPage = () => {
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         currentAddress={currentAddress}
+        onSave={async (data) => {
+          await saveContact(data); // 🔥 simpan via useContactInfo
+          setSelectedContact(data); // 🔥 langsung jadi Data Pengirim aktif
+          setIsEditing(false);
+        }}
       />
     </>
   );

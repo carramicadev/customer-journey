@@ -66,15 +66,16 @@ export const useAddresses = (
   const handleAddNew = () => {
     setCurrentAddress({
       id: "",
-      receiverName: "",
-      receiverPhone: "",
+      name: "",
+      phone: "",
       address: "",
       district: "",
-      postalCode: 0,
-      koordinateReceiver: {
+      postalCode: "",
+      coordinate: {
         lat: 0,
         lng: 0,
       },
+      type: "both",
     });
 
     setIsEditing(true);
@@ -92,7 +93,17 @@ export const useAddresses = (
 
   const handleSelectReceiver = (index: number) => {
     setSelectedReceiverIndex(index);
-    setTempReceiver(addresses[index] as RecipientInfo);
+
+    const addr = addresses[index];
+
+    const mapped: RecipientInfo = {
+      receiverName: addr.name,
+      receiverPhone: addr.phone,
+      address: addr.address,
+      koordinateReceiver: addr.coordinate,
+    };
+
+    setTempReceiver(mapped);
   };
 
   const handleReceiverChange = (

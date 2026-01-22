@@ -14,23 +14,8 @@ import {
 import { firestore, functions } from "@/components/FirebaseFrovider";
 import { deleteCollection } from "@/components/DeleteShoppingCart";
 
-import { Order, ContactInfo } from "@/types/shopping-cart";
-
-/* ================= TYPES ================= */
-
-// interface Product {
-//   id: string;
-//   name: string;
-//   price: number;
-//   quantity: number;
-// }
-
-// interface Order {
-//   id: string;
-//   courier: string;
-//   deliveryFee: number;
-//   products: Product[];
-// }
+import { Order } from "@/types/shopping-cart";
+import { ContactInfo } from "@/types/contact-info";
 
 /* ================= DECLARE MIDTRANS ================= */
 
@@ -81,8 +66,8 @@ export const useCheckout = (
       amount: gross_amount,
       item: [...items, ...deliveryFees],
       customer_details: {
-        first_name: contactInfo?.senderName || "Customer",
-        phone: contactInfo?.senderPhone || "",
+        first_name: contactInfo?.name || "Customer",
+        phone: contactInfo?.phone || "",
         email: contactInfo?.email || "customer@example.com",
       },
       id: `CUSTOMER_ORDER_${id}`,

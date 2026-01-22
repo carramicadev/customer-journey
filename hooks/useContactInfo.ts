@@ -1,165 +1,100 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  onSnapshot,
+  serverTimestamp,
+  deleteDoc,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { firestore } from "@/components/FirebaseFrovider";
-import { CardProps } from "@/components/Card";
-import { User } from "firebase/auth";
+import { ContactInfo } from "@/types/contact-info";
 
-export const useContactInfo = (user: User | null) => {
-  /* ================= STATE ================= */
+export const useContactInfo = (userId?: string) => {
+  const [contacts, setContacts] = useState<ContactInfo[]>([]);
+  const [selectedContact, setSelectedContact] = useState<ContactInfo | null>(
+    null,
+  );
 
-  const [contactInfo, setContactInfo] = useState<CardProps>({
-    senderName: "",
-    senderPhone: "",
-    address: "",
-    email: "",
-  });
+  const contactIsCompleted = Boolean(
+    selectedContact?.name && selectedContact?.phone,
+  );
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isEditingContactInfo, setIsEditingContactInfo] =
-    useState<boolean>(false);
-  const [contactIsCompleted, setContactIsCompleted] = useState<boolean>(false);
+  const deleteContact = async (id: string) => {
+    if (!userId) return;
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+    console.log("DELETE CONTACT:", userId, id); // 🔥 DEBUG
+    await deleteDoc(doc(firestore, "customer", userId, "address", id));
 
-  /* ================= FETCH USER DATA ================= */
-
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const fetchUserData = async () => {
-      setLoading(true);
-      const userDocRef = doc(firestore, "customer", user.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists()) {
-        const userData = userDoc.data() as CardProps;
-        setContactInfo(userData);
-        setIsEditingContactInfo(false);
-      } else {
-        console.log("No user data found in Firestore.");
-      }
-
-      setLoading(false);
-    };
-
-    fetchUserData();
-  }, [user?.uid]);
-
-  /* ================= FETCH CONTACT INFO ================= */
-
-  useEffect(() => {
-    if (!user?.uid) return;
-
-    const fetchContactInfo = async () => {
-      setLoading(true);
-      try {
-        const docRef = doc(firestore, `customer/${user.uid}/account/info`);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const data = docSnap.data() as CardProps;
-          setContactInfo(data);
-          setContactIsCompleted(true);
-        } else {
-          setError("No contact info found.");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch contact info.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchContactInfo();
-  }, [user?.uid]);
-
-  /* ================= AUTO COMPLETE CHECK ================= */
-
-  useEffect(() => {
-    if (
-      contactInfo.address &&
-      contactInfo.senderName &&
-      contactInfo.senderPhone
-    ) {
-      setContactIsCompleted(true);
-    }
-  }, [contactInfo.address, contactInfo.senderName, contactInfo.senderPhone]);
-
-  /* ================= AUTO EDIT MODE ================= */
-
-  useEffect(() => {
-    if (
-      !contactInfo.senderName &&
-      !contactInfo.address &&
-      !contactInfo.senderPhone
-    ) {
-      setIsEditingContactInfo(true);
-    }
-  }, []);
-
-  /* ================= VALIDATION ================= */
-
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!contactInfo.senderName) newErrors.senderName = "Name is required.";
-    if (!contactInfo.senderPhone) newErrors.senderPhone = "Phone is required.";
-    if (!contactInfo.address) newErrors.address = "Address is required.";
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /* ================= HANDLERS ================= */
-
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setContactInfo((prev) => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+    if (selectedContact?.id === id) {
+      setSelectedContact(null);
     }
   };
 
-  const onPhoneChange = (value: string) => {
-    setContactInfo((prev) => ({
-      ...prev,
-      senderPhone: value,
-    }));
+  const saveContact = async (data: ContactInfo) => {
+    if (!userId) return;
 
-    if (errors.senderPhone) {
-      setErrors((prev) => ({ ...prev, senderPhone: "" }));
+    const ref = collection(firestore, "customer", userId, "address");
+
+    if (data.id) {
+      await setDoc(doc(ref, data.id), data, { merge: true });
+      setSelectedContact(data);
+    } else {
+      const docRef = await addDoc(ref, {
+        ...data,
+        createdAt: serverTimestamp(),
+      });
+      setSelectedContact({ ...data, id: docRef.id });
     }
   };
 
-  const onSave = () => {
-    if (!validateForm()) return;
-    setIsEditingContactInfo(false);
-  };
+  /* ===== FETCH CONTACTS ===== */
+  useEffect(() => {
+    if (!userId) return;
 
-  const onEdit = () => {
-    setIsEditingContactInfo(true);
-  };
+    const ref = collection(firestore, "customer", userId, "address");
 
-  /* ================= RETURN ================= */
+    const unsub = onSnapshot(ref, (snap) => {
+      const data = snap.docs.map((d) => {
+        const raw = d.data() as any;
+
+        return {
+          ...raw,
+          id: d.id, // 🔥 PAKSA id dari Firestore, override semua
+        };
+      }) as ContactInfo[];
+
+      setContacts(data);
+    });
+
+    return () => unsub();
+  }, [userId]);
+
+  /* ===== ADD CONTACT ===== */
+  const addContact = async (data: ContactInfo) => {
+    if (!userId) return;
+
+    const ref = collection(firestore, "customer", userId, "address");
+
+    const docRef = await addDoc(ref, {
+      ...data,
+      type: "both",
+      createdAt: serverTimestamp(),
+    });
+
+    setSelectedContact({ ...data, id: docRef.id });
+  };
 
   return {
-    contactInfo,
-    errors,
-    isEditingContactInfo,
+    contacts,
+    selectedContact,
+    setSelectedContact,
     contactIsCompleted,
-    loading,
-    error,
-
-    onChange,
-    onPhoneChange,
-    onSave,
-    onEdit,
+    addContact,
+    deleteContact,
+    saveContact,
   };
 };

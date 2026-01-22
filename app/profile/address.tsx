@@ -1,6 +1,6 @@
 "use client";
 
-import EditAddressModal from "@/components/AddModalAdress";
+import EditAddressModal from "@/components/AddModalAddress";
 import Loader from "@/components/AppLoading";
 import { firestore } from "@/components/FirebaseFrovider";
 import { useAuth } from "@/context/AuthContext";
@@ -10,15 +10,16 @@ import React, { useEffect, useState } from "react";
 
 export interface Address {
   id: string;
-  receiverName: string;
-  receiverPhone: string;
+  name: string;
+  phone: string;
   address: string;
   district: string;
-  postalCode: number;
-  koordinateReceiver: {
+  postalCode: string;
+  coordinate: {
     lat: number;
     lng: number;
   };
+  type?: "sender" | "receiver" | "both";
 }
 
 const AddressDataPage: React.FC = () => {
@@ -59,12 +60,12 @@ const AddressDataPage: React.FC = () => {
   const handleAddNew = () => {
     setCurrentAddress({
       id: "",
-      receiverName: "",
-      receiverPhone: "",
+      name: "",
+      phone: "",
       address: "",
       district: "",
-      postalCode: 0,
-      koordinateReceiver: {
+      postalCode: "",
+      coordinate: {
         lat: 0,
         lng: 0,
       },
@@ -94,7 +95,7 @@ const AddressDataPage: React.FC = () => {
       {/* Add New Address Button */}
       <button
         onClick={handleAddNew}
-        className="mb-6 w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
+        className="mb-6 w-full rounded-lg bg-primary py-2 text-white hover:bg-green-700"
       >
         Tambah Alamat Baru
       </button>
@@ -107,8 +108,8 @@ const AddressDataPage: React.FC = () => {
               key={address.id}
               className="rounded-lg border border-gray-200 p-4"
             >
-              <p className="text-lg font-semibold">{address.receiverName}</p>
-              <p className="text-gray-600">{address.receiverPhone}</p>
+              <p className="text-lg font-semibold">{address.name}</p>
+              <p className="text-gray-600">{address.phone}</p>
               <p className="text-gray-600">{address.address}</p>
               <p className="text-gray-600">
                 {address.district}, {address.postalCode}
@@ -133,7 +134,7 @@ const AddressDataPage: React.FC = () => {
           <div className="flex  flex-col items-center justify-center bg-gray-50">
             {/* Icon */}
             <svg
-              className="mb-4 h-16 w-16 text-gray-400"
+              className="mb-4 size-16 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -165,7 +166,6 @@ const AddressDataPage: React.FC = () => {
         isOpen={isEditing}
         onClose={() => setIsEditing(false)}
         currentAddress={currentAddress}
-        // onSaveSuccess={handleSaveSuccess}
       />
     </div>
   );

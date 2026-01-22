@@ -16,15 +16,6 @@ declare global {
  */
 export {};
 
-/* ================= CONTACT / SENDER ================= */
-
-export interface ContactInfo {
-  senderName: string;
-  senderPhone: string;
-  address: string;
-  email?: string;
-}
-
 /* ================= RECEIVER ================= */
 
 export interface RecipientInfo {

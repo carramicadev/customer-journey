@@ -1,7 +1,7 @@
 // utils/prepareTransactionData.ts
 
 import { Order } from "@/types/shopping-cart";
-import { ContactInfo } from "@/types/shopping-cart";
+import { ContactInfo } from "@/types/contact-info";
 
 /**
  * ===============================
@@ -48,8 +48,8 @@ export const prepareTransactionData = (
     amount: gross_amount,
     item: [...items, ...deliveryFees],
     customer_details: {
-      first_name: contactInfo?.senderName || "Customer",
-      phone: contactInfo?.senderPhone || "",
+      first_name: contactInfo?.name || "Customer",
+      phone: contactInfo?.phone || "",
       email: contactInfo?.email || "customer@example.com",
     },
     id: `CUSTOMER_ORDER_${orderId}`,

@@ -89,8 +89,8 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
                   order.recipient?.address &&
                   order.recipient?.receiverName &&
                   order.recipient?.receiverPhone
-                    ? "ml-4 h-8 w-8 text-green-800"
-                    : "ml-4 h-8 w-8 text-gray-800"
+                    ? "ml-4 size-8 text-green-800"
+                    : "ml-4 size-8 text-gray-800"
                 }`}
               />
             </div>
@@ -163,12 +163,11 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
               <CheckCircleIcon
                 className={`${
                   order.products.length > 0
-                    ? "ml-4 h-8 w-8 text-green-800"
-                    : "ml-4 h-8 w-8 text-gray-800"
+                    ? "ml-4 size-8 text-green-800"
+                    : "ml-4 size-8 text-gray-800"
                 }`}
               />
             </div>
-
             {order.products.map((product: any, pIndex: number) => (
               <OrderItem
                 key={pIndex}
@@ -180,14 +179,16 @@ const OrdersSection: React.FC<OrdersSectionProps> = ({
                 setCurrentOrder={setCurrentOrder}
               />
             ))}
-
             <button
               onClick={() => onAddProduct(index + 1, order.id)}
-              className="mt-4 w-full rounded-md bg-green-600 px-4 py-2 text-white"
+              className="mt-4 w-full rounded-md bg-tertiary px-4 py-2 text-white"
             >
               Tambah Produk
             </button>
-
+            {/* Gift Card Wishes */}
+            <h2 className="mt-4 block text-sm font-medium text-gray-700">
+              Gift Card Wishes
+            </h2>
             <textarea
               value={order.giftCardMessage}
               onChange={(e) => onGiftCardChange(index, e)}

@@ -66,12 +66,12 @@ const UserInfoPage: React.FC = () => {
   const handlePhoneChange = (value: string) => {
     setUserInfo((prevUser) => ({
       ...prevUser,
-      senderPhone: value, // Add the "+" prefix
+      phone: value, // Add the "+" prefix
     }));
 
     // Clear the phone error when the userInfo starts typing
-    if (errors.senderPhone) {
-      setErrors((prevErrors) => ({ ...prevErrors, senderPhone: "" }));
+    if (errors.phone) {
+      setErrors((prevErrors) => ({ ...prevErrors, phone: "" }));
     }
   };
 

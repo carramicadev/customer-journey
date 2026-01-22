@@ -2,10 +2,10 @@ import React from "react";
 
 interface ReceiverCardProps {
   recipient: {
-    receiverName: string;
-    receiverPhone: string;
+    name: string;
+    phone: string;
     address: string;
-    postalCode: number;
+    postalCode: string;
   };
   isSelected: boolean;
   onSelect: () => void;
@@ -23,8 +23,8 @@ const ReceiverCard: React.FC<ReceiverCardProps> = ({
       }`}
       onClick={onSelect}
     >
-      <h3 className="font-bold">{recipient?.receiverName}</h3>
-      <p className="text-sm text-gray-600">{recipient?.receiverPhone}</p>
+      <h3 className="font-bold">{recipient?.name}</h3>
+      <p className="text-sm text-gray-600">{recipient?.phone}</p>
       <p className="text-sm text-gray-600">
         {recipient?.address}, {recipient?.postalCode}
       </p>

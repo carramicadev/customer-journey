@@ -38,7 +38,7 @@ interface Product {
 interface Recipient {
   koordinateReceiver: Coordinate;
   receiverPhone: string;
-  postalCode: number;
+  postalCode: string;
   receiverName: string;
   district: string;
   address: string;
@@ -60,10 +60,10 @@ interface Order {
 }
 
 interface Sender {
-  senderName: string;
+  name: string;
   email: string;
   address: string;
-  senderPhone: string;
+  phone: string;
 }
 
 interface MidtransInfo {
@@ -194,21 +194,6 @@ const OrderHistoryPage: React.FC = () => {
     );
   }
 
-  // const handleTabClick = (tabName: string) => {
-  //   if (tabName === "Logout") {
-  //     handleLogout();
-  //     return;
-  //   }
-  //   setActiveTab(tabName);
-  //   setIsSidebarOpen(false);
-  // };
-
-  // useEffect(() => {
-  //   if (!user?.uid) {
-  //     router.replace("/login");
-  //   }
-  // }, [user]);
-
   return (
     <>
       {/* <Header /> */}
@@ -285,8 +270,7 @@ const OrderHistoryPage: React.FC = () => {
                               </p>
                               <p>Data Pengirim</p>
                               <p className="text-gray-600">
-                                {order.sender?.senderName} |{" "}
-                                {order.sender?.senderPhone}
+                                {order.sender?.name} | {order.sender?.phone}
                               </p>
                             </div>
                             <div className=" flex items-center">

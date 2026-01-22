@@ -22,12 +22,16 @@ import MapComponent, { Coordinate } from "@/components/Map/page";
 
 interface Address {
   id: string;
-  receiverName: string;
-  receiverPhone: string;
+  name: string;
+  phone: string;
   address: string;
   district: string;
-  postalCode: number;
-  koordinateReceiver: { lat: number; lng: number };
+  postalCode: string;
+  coordinate: {
+    lat: number;
+    lng: number;
+  };
+  type?: "sender" | "receiver" | "both";
 }
 
 interface Props {
@@ -45,16 +49,17 @@ export default function AddressDialog({
 
   const [formData, setFormData] = useState<Address>({
     id: "",
-    receiverName: "",
-    receiverPhone: "",
+    name: "",
+    phone: "",
     address: "",
     district: "",
-    postalCode: 0,
-    koordinateReceiver: { lat: 0, lng: 0 },
+    postalCode: "",
+    coordinate: { lat: 0, lng: 0 },
+    type: "both",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [koordinateReceiver, setKoordinateReceiver] = useState<Coordinate>({
+  const [coordinate, setCoordinate] = useState<Coordinate>({
     lat: 0,
     lng: 0,
   });
@@ -63,7 +68,7 @@ export default function AddressDialog({
   useEffect(() => {
     if (currentAddress?.id) {
       setFormData(currentAddress);
-      setKoordinateReceiver(currentAddress.koordinateReceiver);
+      setCoordinate(currentAddress.coordinate);
     }
   }, [currentAddress]);
 
@@ -79,32 +84,31 @@ export default function AddressDialog({
   const handleSave = async () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.receiverName) newErrors.receiverName = "Wajib diisi";
-    if (!formData.receiverPhone) newErrors.receiverPhone = "Wajib diisi";
+    if (!formData.name) newErrors.name = "Wajib diisi";
+    if (!formData.phone) newErrors.phone = "Wajib diisi";
     if (!formData.address) newErrors.address = "Wajib diisi";
     if (!formData.district) newErrors.district = "Wajib diisi";
     if (!formData.postalCode) newErrors.postalCode = "Wajib diisi";
-    if (!koordinateReceiver.lat)
-      newErrors.koordinate = "Koordinat wajib dipilih";
+    if (!coordinate.lat) newErrors.koordinate = "Koordinat wajib dipilih";
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     if (!user) return;
 
-    const ref = collection(firestore, `customer/${user.uid}/address`);
-
+    const ref = collection(firestore, "customer", user.uid, "address");
     if (currentAddress?.id) {
       await setDoc(
-        doc(firestore, `customer/${user.uid}/address/${currentAddress.id}`),
-        { ...formData, koordinateReceiver },
+        doc(firestore, "customer", user.uid, "address", currentAddress.id),
+        { ...formData, coordinate },
         { merge: true },
       );
     } else {
       const res = await addDoc(ref, formData);
       await setDoc(
-        doc(firestore, `customer/${user.uid}/address/${res.id}`),
-        { ...formData, id: res.id, koordinateReceiver },
+        doc(firestore, "customer", user.uid, "address", res.id),
+
+        { ...formData, id: res.id, coordinate },
         { merge: true },
       );
     }
@@ -123,16 +127,16 @@ export default function AddressDialog({
 
         <div className="space-y-4">
           <Input
-            name="receiverName"
+            name="name"
             placeholder="Nama penerima"
-            value={formData.receiverName}
+            value={formData.name}
             onChange={handleChange}
           />
 
           <PhoneInput
             country="id"
-            value={formData.receiverPhone.replace("+", "")}
-            onChange={(v) => setFormData((p) => ({ ...p, receiverPhone: v }))}
+            value={formData.phone.replace("+", "")}
+            onChange={(v) => setFormData((p) => ({ ...p, phone: v }))}
             inputStyle={{ width: "100%" }}
           />
 
@@ -152,8 +156,8 @@ export default function AddressDialog({
           />
 
           <MapComponent
-            koordinateReceiver={koordinateReceiver}
-            setKoordinateReceiver={setKoordinateReceiver}
+            setCoordinate={(c) => setFormData((p) => ({ ...p, coordinate: c }))}
+            coordinate={formData.coordinate}
             errors={errors}
             setErrors={setErrors}
           />
