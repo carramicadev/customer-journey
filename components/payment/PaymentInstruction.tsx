@@ -30,13 +30,13 @@ const copy = async (text?: string) => {
  */
 
 export default function PaymentInstruction({ result }: Props) {
+  const router = useRouter();
+  const [showHow, setShowHow] = useState(false);
+
   if (!result) return null;
 
   const isVA = Boolean(result.vaNumber);
   const isRedirect = Boolean(result.redirectUrl);
-
-  const router = useRouter();
-  const [showHow, setShowHow] = useState(false);
 
   /**
    * ============================================
