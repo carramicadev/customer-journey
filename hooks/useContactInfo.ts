@@ -10,7 +10,7 @@ import {
   doc,
   setDoc,
 } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { ContactInfo } from "@/types/contact-info";
 
 export const useContactInfo = (userId?: string) => {

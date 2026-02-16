@@ -1,6 +1,6 @@
 "use client";
 // src/context/AuthContext.tsx
-import { auth } from "@/components/FirebaseFrovider";
+import { auth } from "@/components/FirebaseProvider";
 import { User } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useState } from "react";
 // import { auth, User } from "../firebase";

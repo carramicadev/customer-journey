@@ -6,10 +6,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { ShoppingCart, User } from "lucide-react";
 import { collection, onSnapshot } from "firebase/firestore";
 
-import { firestore } from "../FirebaseFrovider";
+import { firestore } from "../FirebaseProvider";
 import { useAuth } from "@/context/AuthContext";
 import { signOut } from "firebase/auth";
-import { auth } from "../FirebaseFrovider";
+import { auth } from "../FirebaseProvider";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +72,7 @@ export default function Header({
   }, [user?.uid]);
 
   return (
-    <header className="bg-primary fixed inset-x-0 top-0 z-50 shadow">
+    <header className="fixed inset-x-0 top-0 z-50 bg-primary shadow">
       <div className="mx-auto flex h-20 max-w-7xl items-center px-4">
         {/* ===== LEFT: LOGO ===== */}
         <div
@@ -137,7 +137,7 @@ export default function Header({
           {/* USER / LOGIN */}
           {!user ? (
             <Button
-              className="text-primary bg-white hover:bg-gray-100"
+              className="bg-white text-primary hover:bg-gray-100"
               onClick={() => router.push("/login")}
             >
               Login

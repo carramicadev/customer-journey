@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { collection, onSnapshot } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { Address } from "@/app/profile/address";
 import { doc, updateDoc } from "firebase/firestore";
 

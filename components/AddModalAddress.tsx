@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 
 import React, { useState, useEffect } from "react"; // Add useEffect
 import PhoneInput from "react-phone-input-2";
-import { firestore, functions } from "./FirebaseFrovider";
+import { firestore, functions } from "./FirebaseProvider";
 import "react-phone-input-2/lib/style.css";
 import MapComponent, { Coordinate } from "./Map/page";
 import { httpsCallable } from "firebase/functions";
@@ -469,7 +469,7 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
           <div className="flex space-x-2">
             <button
               onClick={handleSave}
-              className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
+              className="w-full rounded-lg bg-primary py-2 text-white hover:bg-green-700"
             >
               Simpan
             </button>

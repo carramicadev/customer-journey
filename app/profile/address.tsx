@@ -2,7 +2,7 @@
 
 import EditAddressModal from "@/components/AddModalAddress";
 import Loader from "@/components/AppLoading";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { useAuth } from "@/context/AuthContext";
 import { collection, onSnapshot } from "firebase/firestore";
 import React, { useEffect, useState } from "react";

@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/context/AuthContext";
-import { firestore, functions } from "@/components/FirebaseFrovider";
+import { firestore, functions } from "@/components/FirebaseProvider";
 import MapComponent, { Coordinate } from "@/components/Map/page";
 
 interface Address {

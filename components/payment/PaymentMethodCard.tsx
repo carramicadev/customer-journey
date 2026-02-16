@@ -58,7 +58,7 @@ export default function PaymentMethodCard({
       <div
         className={`
           text-lg font-bold
-          ${isActive ? "text-green-700" : "text-gray-400"}
+          ${isActive ? "text-primary" : "text-gray-400"}
         `}
       >
         ›

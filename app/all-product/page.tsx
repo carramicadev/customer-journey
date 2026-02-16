@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { currency } from "@/utils/formatter";
 import { useCategories } from "@/context/CategoriesContext";
 import Loader from "@/components/AppLoading";
@@ -202,7 +202,7 @@ export default function AllProducts() {
                 onClick={() => setCurrentPage(i + 1)}
                 className={`rounded-md px-4 py-2 ${
                   currentPage === i + 1
-                    ? "bg-green-600 text-white"
+                    ? "bg-primary text-white"
                     : "bg-white text-gray-700"
                 }`}
               >
@@ -228,7 +228,7 @@ export default function AllProducts() {
 
       {/* FLOATING BUTTON */}
       {orderIndex && orderId && (
-        <button className="fixed bottom-4 left-4 flex items-center rounded-md bg-green-600 px-4 py-2 text-white shadow">
+        <button className="fixed bottom-4 left-4 flex items-center rounded-md bg-primary px-4 py-2 text-white shadow">
           <InformationCircleIcon className="mr-2 size-6" />
           Tambah product untuk order {orderIndex}
         </button>

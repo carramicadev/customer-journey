@@ -91,7 +91,7 @@ export default function SelectContactModal({
               >
                 <div className="cursor-pointer" onClick={() => onSelect(c)}>
                   {c.id === selectedContact?.id && (
-                    <span className="mb-1 inline-block text-xs font-semibold text-green-600">
+                    <span className="mb-1 inline-block text-xs font-semibold text-primary">
                       Dipilih
                     </span>
                   )}

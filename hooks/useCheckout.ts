@@ -11,7 +11,7 @@ import {
   setDoc,
   updateDoc,
 } from "firebase/firestore";
-import { firestore, functions } from "@/components/FirebaseFrovider";
+import { firestore, functions } from "@/components/FirebaseProvider";
 import { deleteCollection } from "@/components/DeleteShoppingCart";
 
 import { Order } from "@/types/shopping-cart";

@@ -11,8 +11,8 @@ let firebaseConfig = {
   appId: "1:1071156852912:web:671a856c792a65750ee375",
   measurementId: "G-M7CQWL06KD",
 };
-console.log(process.env.REACT_APP_ENVIRONMENT === "production");
-if (process.env.REACT_APP_ENVIRONMENT === "production") {
+console.log(process.env.NEXT_PUBLIC_ENVIRONMENT === "production");
+if (process.env.NEXT_PUBLIC_ENVIRONMENT === "production") {
   firebaseConfig = {
     apiKey: "AIzaSyDTH2T39X_A8W36o70nqym-8tntdIsdF00",
     authDomain: "carramica-prod.firebaseapp.com",
@@ -25,8 +25,8 @@ if (process.env.REACT_APP_ENVIRONMENT === "production") {
 }
 export default firebaseConfig;
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// const app = initializeApp(firebaseConfig);
+// const db = getFirestore(app);
 // const analytics = getAnalytics(app);
 
-export { db };
+// export { db };

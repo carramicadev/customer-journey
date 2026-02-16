@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { httpsCallable } from "firebase/functions";
 import { doc, setDoc } from "firebase/firestore";
-import { firestore, functions } from "@/components/FirebaseFrovider";
+import { firestore, functions } from "@/components/FirebaseProvider";
 
 import { Order, ShippingService } from "@/types/shopping-cart";
 

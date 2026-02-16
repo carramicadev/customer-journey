@@ -55,11 +55,11 @@ export default function PaymentInstruction({ result }: Props) {
   }
 
   return (
-    <Card className="mt-6 space-y-4 border-2 border-green-600 bg-green-50 p-6">
+    <Card className="mt-6 space-y-4 border-2 border-primary bg-green-50 p-6">
       {/* HEADER */}
       <div className="flex items-center gap-2">
-        <CheckCircle className="size-6 text-green-600" />
-        <h2 className="text-lg font-semibold text-green-700">
+        <CheckCircle className="size-6 text-primary" />
+        <h2 className="text-lg font-semibold text-primary">
           Instruksi Pembayaran
         </h2>
       </div>

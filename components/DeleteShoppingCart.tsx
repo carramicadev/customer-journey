@@ -7,7 +7,7 @@ import {
   doc,
   writeBatch,
 } from "firebase/firestore";
-import { firestore } from "./FirebaseFrovider";
+import { firestore } from "./FirebaseProvider";
 
 /**
  * Recursively deletes all documents in a collection and their subcollections

@@ -11,7 +11,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { useRouter } from "next/navigation";
 import { Order, ShippingService } from "@/types/shopping-cart";
 import { ContactInfo } from "@/types/contact-info";

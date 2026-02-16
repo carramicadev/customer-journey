@@ -17,7 +17,7 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { useRouter } from "@/node_modules/next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { collection, onSnapshot } from "firebase/firestore";
-import { firestore } from "./FirebaseFrovider";
+import { firestore } from "./FirebaseProvider";
 import { usePathname } from "next/navigation";
 
 interface HeaderProps {

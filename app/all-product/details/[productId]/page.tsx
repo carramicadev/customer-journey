@@ -21,7 +21,7 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { Product } from "../../page";
 import { currency } from "@/utils/formatter";
 import { useAuth } from "@/context/AuthContext";
@@ -352,13 +352,13 @@ const ProductPage: React.FC = () => {
               </div>
 
               <button
-                className="w-full rounded-lg border-2 border-green-600 py-2 text-green-600 transition-colors duration-300 hover:bg-green-100 hover:text-white"
+                className="w-full rounded-lg border-2 border-primary py-2 text-primary transition-colors duration-300 hover:border-tertiary hover:bg-tertiary hover:text-white"
                 onClick={() => handleAddToCart("add-to-cart")}
               >
                 Add to Cart
               </button>
               <button
-                className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
+                className="w-full rounded-lg bg-primary py-2 text-white hover:bg-green-700"
                 onClick={() => handleAddToCart("buy")}
               >
                 Buy Now
@@ -417,7 +417,7 @@ const ProductPage: React.FC = () => {
       {orderIndex && (
         <button
           style={{ zIndex: 9999 }}
-          className="z-9000000 fixed bottom-0 left-0 m-4 flex rounded-md bg-green-600 px-4 py-2 text-white shadow-lg hover:bg-green-700"
+          className="z-9000000 fixed bottom-0 left-0 m-4 flex rounded-md bg-primary px-4 py-2 text-white shadow-lg hover:bg-green-700"
         >
           <InformationCircleIcon className="mr-4 size-6 text-white dark:text-white" />
           {` Tambah product untuk order ${orderIndex}`}

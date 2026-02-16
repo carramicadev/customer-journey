@@ -1,5 +1,5 @@
 import Loader from "@/components/AppLoading";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import Footer from "@/components/footer";
 import { useCategories } from "@/context/CategoriesContext";
 import { currency } from "@/utils/formatter";

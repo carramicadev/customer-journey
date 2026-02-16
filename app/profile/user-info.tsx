@@ -1,6 +1,6 @@
 "use client";
 import Loader from "@/components/AppLoading";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { useAuth } from "@/context/AuthContext";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
@@ -216,14 +216,14 @@ const UserInfoPage: React.FC = () => {
         {isEditing ? (
           <button
             onClick={handleSave}
-            className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
+            className="w-full rounded-lg bg-primary py-2 text-white hover:bg-green-700"
           >
             Save
           </button>
         ) : (
           <button
             onClick={() => setIsEditing(true)}
-            className="w-full rounded-lg bg-green-600 py-2 text-white hover:bg-green-700"
+            className="w-full rounded-lg bg-primary py-2 text-white hover:bg-green-700"
           >
             Edit
           </button>

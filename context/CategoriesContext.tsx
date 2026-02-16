@@ -7,7 +7,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 // import { db } from "@/lib/firebase"; // Adjust the import based on your Firebase setup
 
 interface Category {

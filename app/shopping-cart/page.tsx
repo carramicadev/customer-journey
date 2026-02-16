@@ -41,7 +41,7 @@ import {
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { Card } from "@/components/ui/card";
 
 const ShoppingCartPage = () => {

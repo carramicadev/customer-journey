@@ -19,10 +19,10 @@ export default function ReceiverInfoPreview({
   onToggleSendToSelf,
 }: Props) {
   return (
-    <Card className="space-y-4 border-2 border-green-600 bg-green-50 p-6">
+    <Card className="space-y-4 border-2 border-primary bg-green-50 p-6">
       <div className="flex items-center gap-2">
-        <CheckCircle className="size-6 text-green-600" />
-        <h2 className="text-lg font-semibold text-green-700">Data Penerima</h2>
+        <CheckCircle className="size-6 text-primary" />
+        <h2 className="text-lg font-semibold text-primary">Data Penerima</h2>
       </div>
 
       <div className="grid grid-cols-1 gap-4 rounded-md border p-4 text-sm md:grid-cols-2">

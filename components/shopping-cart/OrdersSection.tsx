@@ -18,7 +18,7 @@ import { Button } from "../ui/button";
 import ReceiverInfoSection from "./receiver-info/ReceiverInfoSection";
 import { doc, updateDoc } from "firebase/firestore";
 import { ContactInfo } from "@/types/contact-info";
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 import { CheckCircle } from "lucide-react";
 
 interface OrdersSectionProps {

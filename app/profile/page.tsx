@@ -12,7 +12,7 @@ import {
 import UserInfoPage from "./user-info";
 import AddressDataPage from "./address";
 import { signOut } from "firebase/auth";
-import { auth, firestore } from "@/components/FirebaseFrovider";
+import { auth, firestore } from "@/components/FirebaseProvider";
 import { useRouter } from "next/navigation";
 import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
@@ -224,7 +224,7 @@ const OrderHistoryPage: React.FC = () => {
                         <button
                           className={`flex w-full items-center space-x-3 px-6 py-3 text-left hover:bg-gray-200 ${
                             activeTab === tab.name
-                              ? "bg-green-100 text-green-600"
+                              ? "bg-green-100 text-primary"
                               : "text-gray-700"
                           }`}
                           onClick={() => {
@@ -276,7 +276,7 @@ const OrderHistoryPage: React.FC = () => {
                             <div className=" flex items-center">
                               <p>Status Pembayaran:</p>
                               <p
-                                className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-green-800" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
+                                className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-primary" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
                               >
                                 {order?.paymentStatus}
                               </p>
@@ -319,7 +319,7 @@ const OrderHistoryPage: React.FC = () => {
                             })}
                           </div>
                           <div className="flex justify-between">
-                            <button className="mr-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
+                            <button className="mr-1 mt-4 rounded-lg bg-primary px-4 py-2 text-white hover:bg-green-600">
                               Download Invoice
                             </button>
                             {order?.paymentStatus === "pending" &&
@@ -328,7 +328,7 @@ const OrderHistoryPage: React.FC = () => {
                                   onClick={() =>
                                     handlePayment(order?.midtrans?.token)
                                   }
-                                  className="ml-1 mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600"
+                                  className="ml-1 mt-4 rounded-lg bg-primary px-4 py-2 text-white hover:bg-green-600"
                                 >
                                   Bayar sekarang
                                 </button>

@@ -97,14 +97,12 @@ export default function PaymentMethodSection({ selected, onSelect }: Props) {
       {/* HEADER */}
       <div className="flex items-center gap-2">
         <CheckCircle
-          className={`size-6 ${
-            isCompleted ? "text-green-600" : "text-gray-300"
-          }`}
+          className={`size-6 ${isCompleted ? "text-primary" : "text-gray-300"}`}
         />
 
         <h2
           className={`text-lg font-semibold ${
-            isCompleted ? "text-green-700" : ""
+            isCompleted ? "text-primary" : ""
           }`}
         >
           Metode Pembayaran

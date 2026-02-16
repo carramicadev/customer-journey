@@ -1,147 +1,34 @@
 "use client";
-
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import {
-  signInWithPhoneNumber,
-  ConfirmationResult,
-  RecaptchaVerifier,
-} from "firebase/auth";
+import React, { useRef, useState } from "react";
+import { auth, RecaptchaVerifier } from "@/components/FirebaseProvider";
+import { signInWithPhoneNumber } from "firebase/auth";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { useRouter } from "next/navigation";
+// import { useRouter } from "next/router";
 
-import { auth } from "@/components/FirebaseFrovider";
-
-export default function LoginPage() {
+const PhoneAuth: React.FC = () => {
   const router = useRouter();
-
-  /* ================= STATE ================= */
-
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(
-    null,
-  );
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [otpSent, setOtpSent] = useState(false); // Track if OTP has been sent
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
-  const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [loading, setLoading] = useState(false);
   const inputRefs = useRef<HTMLInputElement[]>([]);
 
-  /* ================= reCAPTCHA INIT ================= */
+  const handleChange = (index: number, value: string) => {
+    if (/^\d*$/.test(value)) {
+      // Ensure only digits are allowed
+      const newOtp = [...otp];
+      newOtp[index] = value;
+      setOtp(newOtp);
 
-  // useEffect(() => {
-  //   if (typeof window === "undefined") return;
-
-  //   if (!(window as any).recaptchaVerifier) {
-  //     (window as any).recaptchaVerifier = new RecaptchaVerifier(
-  //       auth,
-  //       "recaptcha-container",
-  //       {
-  //         size: "invisible",
-  //       },
-  //     );
-  //   }
-  // }, []);
-  const initRecaptcha = () => {
-    if (typeof window === "undefined") return null;
-
-    if ((window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier.clear();
-    }
-
-    (window as any).recaptchaVerifier = new RecaptchaVerifier(
-      auth,
-      "recaptcha-container",
-      {
-        size: "invisible",
-      },
-    );
-
-    return (window as any).recaptchaVerifier;
-  };
-
-  const resetRecaptcha = () => {
-    const verifier = (window as any).recaptchaVerifier;
-    if (verifier) {
-      verifier.clear();
-      (window as any).recaptchaVerifier = null;
+      if (value && index < 5) {
+        inputRefs.current[index + 1]?.focus();
+      }
     }
   };
 
-  /* ================= HANDLERS ================= */
-
-  const sendOtp = async () => {
-    if (!phoneNumber) {
-      alert("Masukkan nomor telepon terlebih dahulu");
-      return;
-    }
-
-    if (!phoneNumber.startsWith("+")) {
-      alert("Format nomor tidak valid");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // const appVerifier = (window as any).recaptchaVerifier;
-      const appVerifier = initRecaptcha();
-
-      if (!appVerifier) throw new Error("Recaptcha not ready");
-
-      const result = await signInWithPhoneNumber(
-        auth,
-        phoneNumber,
-        appVerifier,
-      );
-
-      setConfirmation(result);
-      setStep("otp");
-    } catch (err) {
-      console.error(err);
-      alert("Gagal mengirim OTP. Periksa nomor atau coba lagi.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    if (!confirmation) return;
-
-    const code = otp.join("");
-    if (code.length !== 6) {
-      alert("OTP harus 6 digit");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await confirmation.confirm(code);
-      document.cookie =
-        "auth-token=logged-in; path=/; max-age=2592000; SameSite=Lax";
-
-      router.replace("/");
-    } catch (err) {
-      console.error(err);
-      alert("OTP salah atau sudah kedaluwarsa");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  /* ================= OTP INPUT UX ================= */
-
-  const handleOtpChange = (index: number, value: string) => {
-    if (!/^\d?$/.test(value)) return;
-
-    const next = [...otp];
-    next[index] = value;
-    setOtp(next);
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpBackspace = (
+  const handleKeyDown = (
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>,
   ) => {
@@ -149,98 +36,187 @@ export default function LoginPage() {
       inputRefs.current[index - 1]?.focus();
     }
   };
+  // Set up reCAPTCHA
+  const setUpRecaptcha = () => {
+    (window as any).recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container",
+      {
+        size: "normal",
+        callback: (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+          // ...
+        },
+        // "expired-callback": () => {
+        //   // Response expired. Ask user to solve reCAPTCHA again.
+        //   // ...
+        // },
+      },
+    );
+  };
+  const [loading, setLoading] = useState(false);
 
-  /* ================= UI ================= */
+  // Handle sending OTP
+  const handleSendOtp = async () => {
+    setLoading(true);
+    setUpRecaptcha();
+    const appVerifier = (window as any).recaptchaVerifier;
+    try {
+      const result = await signInWithPhoneNumber(
+        auth,
+        phoneNumber,
+        appVerifier,
+      );
+      setConfirmationResult(result);
+      setOtpSent(true); // OTP has been sent
+      alert("OTP sent!");
+    } catch (error) {
+      console.log("Error sending OTP:", error);
+    }
+    setLoading(false);
+  };
 
+  // Handle verifying OTP
+  const handleVerifyOtp = async () => {
+    setLoading(true);
+    try {
+      await confirmationResult.confirm(otp.join(""));
+      alert("Phone number verified!");
+      router.push("/");
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+    }
+    setLoading(false);
+  };
+  console.log(otp.join(""));
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow">
-        {/* reCAPTCHA container (WAJIB ADA) */}
-        <div id="recaptcha-container" className="hidden" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
+      {/* <h2>Phone Authentication</h2> */}
 
-        {/* ===== BRAND ===== */}
-        <div className="mb-6 text-center">
-          <h1 className="text-sm font-semibold text-gray-600">
-            Selamat Datang di
-          </h1>
-          <h2 className="text-3xl font-bold text-green-600">CARRAMICA</h2>
-        </div>
+      {/* Step 1: Input phone number and send OTP */}
+      {!otpSent && (
+        <>
+          <div id="recaptcha-container"></div>
+          <div>
+            {/* Welcome Message */}
+            <div className="flex flex-col items-center justify-center text-center">
+              <h1 className="mb-4 font-bold text-gray-800">
+                Selamat Datang di
+              </h1>
+              <h1 className="mb-4 text-4xl font-bold text-gray-800">
+                <span className="text-primary">CARRAMICA</span>
+              </h1>
+            </div>
 
-        {/* ===== STEP 1: PHONE ===== */}
-        {step === "phone" && (
-          <>
-            <p className="mb-4 text-sm text-gray-600">
-              Masukkan nomor telepon aktif untuk menerima <b>SMS OTP</b>.
+            {/* Phone Number Input */}
+            <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
+              <p className="mb-4 text-gray-600">
+                Masukkan nomor telepon yang terhubung dengan Whatsapp untuk
+                login
+              </p>
+
+              {/* <div className="mb-4 flex items-center overflow-hidden rounded-lg border border-gray-300"> */}
+              {/* <span className="bg-gray-100 px-4 py-2 text-gray-600">+62</span>
+      <input
+        type="text"
+        placeholder="822 1075 7525"
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+        className="flex-1 px-4 py-2 outline-none"
+      /> */}
+              <PhoneInput
+                inputClass="input"
+                inputStyle={{ width: "100%" }}
+                // name="senderPhone"
+                country={"id"} // Set a default country
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(`+${e}`)}
+                // onBlur={(e) => handleCheckPhone(order.receiverPhone)}
+                enableSearch={true} // Enable search in the country dropdown
+                placeholder="Enter phone number"
+              />
+              {/* </div> */}
+
+              {/* Terms and Conditions */}
+              <p className="mb-6 mt-4  text-sm text-gray-400">
+                Dengan masuk kedalam aplikasi ini, saya menyetujui Syarat dan
+                Ketentuan serta Kebijakan Privasi
+              </p>
+
+              {/* Login/Register Button */}
+              <button
+                disabled={loading}
+                onClick={handleSendOtp}
+                className="w-full rounded-lg bg-primary py-2 text-white transition duration-300 hover:bg-green-700"
+              >
+                {loading ? "Loading..." : "Login/Register"}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Step 2: Input OTP and verify */}
+      {otpSent && (
+        <div>
+          {/* Welcome Message */}
+
+          {/* Phone Number Input */}
+          <div className="flex flex-col items-center justify-center text-center">
+            <p className="mb-4 font-bold text-gray-600">OTP Verifikasi</p>
+            <p className="mb-6 text-sm text-gray-500">
+              masukkan 6 digit OTP yang telah dikirimkan SMS ke nomor{" "}
+              {phoneNumber}
             </p>
 
-            <PhoneInput
-              country="id"
-              value={phoneNumber.replace("+", "")}
-              onChange={(v) => setPhoneNumber(`+${v}`)}
-              inputStyle={{ width: "100%" }}
-              enableSearch
-              placeholder="Contoh: 82210757525"
-            />
-
-            <p className="mt-4 text-xs text-gray-500">
-              Dengan melanjutkan, Anda menyetujui Syarat & Ketentuan serta
-              Kebijakan Privasi Carramica.
-            </p>
-
-            <button
-              disabled={loading}
-              onClick={sendOtp}
-              className="mt-6 w-full rounded-md bg-green-600 py-2 text-white hover:bg-green-700 disabled:opacity-60"
-            >
-              {loading ? "Mengirim OTP..." : "Login / Daftar"}
-            </button>
-          </>
-        )}
-
-        {/* ===== STEP 2: OTP ===== */}
-        {step === "otp" && (
-          <>
-            <p className="mb-4 text-center text-sm text-gray-600">
-              Masukkan 6 digit OTP yang dikirim via <b>SMS</b> ke:
-              <br />
-              <span className="font-semibold">{phoneNumber}</span>
-            </p>
-
-            <div className="mb-6 flex justify-center gap-2">
-              {otp.map((digit, i) => (
+            {/* <div className="mb-4 flex items-center overflow-hidden rounded-lg border border-gray-300"> */}
+            {/* <span className="bg-gray-100 px-4 py-2 text-gray-600">+62</span>
+      <input
+        type="text"
+        placeholder="822 1075 7525"
+        value={phoneNumber}
+        onChange={(e) => setPhoneNumber(e.target.value)}
+        className="flex-1 px-4 py-2 outline-none"
+      /> */}
+            <div className="mb-6 flex justify-center space-x-2">
+              {otp.map((digit, index) => (
                 <input
-                  key={i}
-                  ref={(el) => el && (inputRefs.current[i] = el)}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpBackspace(i, e)}
+                  key={index}
+                  type="text"
                   maxLength={1}
-                  className="size-12 rounded-md border text-center text-lg focus:border-green-500 focus:outline-none"
+                  value={digit}
+                  onChange={(e) => handleChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  ref={(el) => el && (inputRefs.current[index] = el)}
+                  className="h-12 w-12 rounded-lg border text-center focus:border-blue-500 focus:outline-none"
                 />
               ))}
             </div>
 
+            {/* Terms and Conditions */}
+
+            {/* Login/Register Button */}
             <button
               disabled={loading}
-              onClick={verifyOtp}
-              className="w-full rounded-md bg-green-600 py-2 text-white hover:bg-green-700 disabled:opacity-60"
+              onClick={handleVerifyOtp}
+              className="w-full rounded-lg bg-primary py-2 text-white transition duration-300 hover:bg-green-700"
             >
-              {loading ? "Memverifikasi..." : "Konfirmasi"}
+              {loading ? "Loading..." : "Konfirmasi"}
             </button>
-
-            <button
-              onClick={() => {
-                resetRecaptcha();
-                setStep("phone");
-                setOtp(Array(6).fill(""));
-              }}
-              className="mt-3 w-full text-sm text-gray-500 hover:underline"
-            >
-              Ganti nomor
-            </button>
-          </>
-        )}
-      </div>
+          </div>
+        </div>
+        // <div>
+        //   <input
+        //     type="text"
+        //     placeholder="Enter OTP"
+        //     value={otp}
+        //     onChange={(e) => setOtp(e.target.value)}
+        //   />
+        //   <button onClick={handleVerifyOtp}>Verify OTP</button>
+        // </div>
+      )}
     </div>
   );
-}
+};
+
+export default PhoneAuth;

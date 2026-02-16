@@ -51,7 +51,7 @@ const OrderItem: React.FC<OrderItemProps> = ({
           {/* Info */}
           <div className="flex flex-1 flex-col gap-1">
             <div className="flex justify-between">
-              <p className="font-semibold text-green-800">{product.name}</p>
+              <p className="font-semibold text-primary">{product.name}</p>
               <div className="flex justify-end">
                 {/* {product.quantity >= product.stok && (
                 <p className="mt-1 text-xs text-red-600">Stok habis</p>

@@ -28,7 +28,7 @@ import { usePaymentMethod } from "@/hooks/usePaymentMethod";
 
 import { PaymentMethod, PaymentResult } from "@/types/payment";
 
-import { firestore } from "@/components/FirebaseFrovider";
+import { firestore } from "@/components/FirebaseProvider";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

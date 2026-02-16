@@ -52,13 +52,13 @@ const OrderAccordion: React.FC<OrderAccordionProps> = ({
 
                 <CheckCircleIcon
                   className={`size-6 ${
-                    isComplete ? "text-green-700" : "text-gray-400"
+                    isComplete ? "text-primary" : "text-gray-400"
                   }`}
                 />
 
                 <span
                   className={`text-sm font-semibold ${
-                    isComplete ? "text-green-700" : "text-gray-500"
+                    isComplete ? "text-primary" : "text-gray-500"
                   }`}
                 >
                   {isComplete ? "Data Lengkap" : "Data Belum Lengkap"}

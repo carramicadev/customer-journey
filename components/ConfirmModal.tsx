@@ -40,7 +40,7 @@ export default function ConfirmModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-green-600">
+          <DialogTitle className="flex items-center gap-2 text-primary">
             <CheckCircle className="size-5" />
             Berhasil masuk keranjang
           </DialogTitle>
@@ -56,10 +56,10 @@ export default function ConfirmModal({
           />
           <div>
             <p className="font-semibold">{product.name}</p>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               Qty: {product.quantity}
             </p>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-muted-foreground">
               Rp{product.price.toLocaleString()}
             </p>
           </div>
