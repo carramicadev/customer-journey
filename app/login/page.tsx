@@ -4,10 +4,12 @@ import { auth, RecaptchaVerifier } from "@/components/FirebaseProvider";
 import { signInWithPhoneNumber } from "firebase/auth";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 // import { useRouter } from "next/router";
 
 const PhoneAuth: React.FC = () => {
+  const searchParams = useSearchParams();
+
   const router = useRouter();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<any>(null);
@@ -83,11 +85,15 @@ const PhoneAuth: React.FC = () => {
   const handleVerifyOtp = async () => {
     setLoading(true);
     try {
-      await confirmationResult.confirm(otp.join(""));
+      // await confirmationResult.confirm(otp.join(""));
       const user = await confirmationResult.confirm(otp.join(""));
-      document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax`;
+
+      document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
+
       alert("Phone number verified!");
-      router.push("/");
+      const redirect =
+        new URLSearchParams(window.location.search).get("redirect") || "/";
+      router.push(redirect);
     } catch (error) {
       console.error("Error verifying OTP:", error);
     }
