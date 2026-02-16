@@ -59,7 +59,10 @@ const PhoneAuth: React.FC = () => {
   // Handle sending OTP
   const handleSendOtp = async () => {
     setLoading(true);
-    setUpRecaptcha();
+    if (!(window as any).recaptchaVerifier) {
+      setUpRecaptcha();
+    }
+
     const appVerifier = (window as any).recaptchaVerifier;
     try {
       const result = await signInWithPhoneNumber(
@@ -81,6 +84,8 @@ const PhoneAuth: React.FC = () => {
     setLoading(true);
     try {
       await confirmationResult.confirm(otp.join(""));
+      const user = await confirmationResult.confirm(otp.join(""));
+      document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax`;
       alert("Phone number verified!");
       router.push("/");
     } catch (error) {
