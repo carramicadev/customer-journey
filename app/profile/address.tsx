@@ -12,7 +12,10 @@ export interface Address {
   id: string;
   name: string;
   phone: string;
-  address: string;
+
+  address: string; // 🔥 alamat manual
+  pinAddress: string; // 🔥 TAMBAH INI (hasil pin point)
+
   district: string;
   postalCode: string;
   coordinate: {
@@ -63,6 +66,7 @@ const AddressDataPage: React.FC = () => {
       name: "",
       phone: "",
       address: "",
+      pinAddress: "",
       district: "",
       postalCode: "",
       coordinate: {

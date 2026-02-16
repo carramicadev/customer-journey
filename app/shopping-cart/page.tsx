@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { RecipientInfo } from "@/types/shopping-cart";
 
 // import Header from "@/components/header";
 import Loader from "@/components/AppLoading";
@@ -31,10 +32,22 @@ import { useUIState } from "@/hooks/useUIState";
 /* ================= UTILS ================= */
 
 import { calculateOverallTotals } from "@/utils/calculateTotals";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
+import { firestore } from "@/components/FirebaseFrovider";
+import { Card } from "@/components/ui/card";
 
 const ShoppingCartPage = () => {
   const router = useRouter();
   const { user } = useAuth();
+  // const [sendToSelf, setSendToSelf] = useState<Record<number, boolean>>({});
 
   /* ================= UI STATE ================= */
 
@@ -66,6 +79,8 @@ const ShoppingCartPage = () => {
   const {
     orders,
     setOrders,
+    resetReceiverAt,
+    applySenderAsReceiver,
     handleAddOrder,
     handleQuantityChange,
     handleDeleteProduct,
@@ -105,13 +120,6 @@ const ShoppingCartPage = () => {
 
   /* ================= CHECKOUT ================= */
 
-  const { handleCheckout } = useCheckout(
-    user?.uid,
-    selectedContact ?? undefined, // 🔥 INI DATA PENGIRIM
-    orders,
-    setOrders,
-  );
-
   /* ================= TOTALS ================= */
 
   const { overallSubtotal, overallDeliveryFee, overallTotal } =
@@ -125,15 +133,24 @@ const ShoppingCartPage = () => {
     }
   }, [user, router]);
 
+  // Update 3
+  useEffect(() => {
+    if (!selectedContact || !orders.length) return;
+
+    orders.forEach((order, index) => {
+      if (order.sendToSelf && !order.recipient?.receiverName) {
+        applySenderAsReceiver(index, selectedContact);
+      }
+    });
+  }, [selectedContact?.id]);
+
   /* ================= LOADING ================= */
 
   useEffect(() => {
     setIsLoading(false);
   }, []);
 
-  if (isLoading) {
-    return <Loader size="md" color="green" />;
-  }
+  if (!user) return null;
 
   /* ================= RENDER ================= */
 
@@ -180,54 +197,100 @@ const ShoppingCartPage = () => {
               onAddProduct={handleAddProduct}
               onGiftCardChange={handleGiftCardMessageChange}
               setCurrentOrder={setCurrentOrder}
+              selectedContact={selectedContact}
+              resetReceiverAt={resetReceiverAt}
+              applySenderAsReceiver={applySenderAsReceiver} // 🔥
+              userId={user?.uid}
+              expandedOrderIndex={expandedOrderIndex}
             />
           </div>
 
           {/* ================= RIGHT ================= */}
           <div className="lg:w-1/2">
-            <OrderAccordion
-              orders={orders}
-              contactIsCompleted={contactIsCompleted}
-              expandedOrderIndex={expandedOrderIndex}
-              onToggleAccordion={toggleAccordion}
-              // onDeleteOrder={(index) =>
-              //   setOrders((prev) => prev.filter((_, i) => i !== index))
-              // }
-              onDeleteOrder={(index) => {
-                const orderId = orders[index]?.id;
-                if (!orderId) return;
+            <Card className="border-2 p-6">
+              <h2 className="mb-4 text-xl font-semibold text-primary">
+                Daftar Orderan
+              </h2>
+              <OrderAccordion
+                orders={orders}
+                contactIsCompleted={contactIsCompleted}
+                expandedOrderIndex={expandedOrderIndex}
+                onToggleAccordion={toggleAccordion}
+                onDeleteOrder={(index) => {
+                  const orderId = orders[index]?.id;
+                  if (!orderId) return;
 
-                handleDeleteOrder(orderId);
-              }}
-            />
+                  handleDeleteOrder(orderId);
+                }}
+              />
 
-            <AddOrderButton orders={orders} onAddOrder={handleAddOrder} />
+              <AddOrderButton orders={orders} onAddOrder={handleAddOrder} />
 
-            <PaymentSummary
-              overallSubtotal={overallSubtotal}
-              overallDeliveryFee={overallDeliveryFee}
-              overallTotal={overallTotal}
-              orders={orders}
-              loadingCheckout={loadingCheckout}
-              onCheckout={() => {
-                setLoadingCheckout(true);
-                handleCheckout();
-              }}
-            />
+              {orders.length < 10 && (
+                <p className="mb-4 text-base text-red-500">
+                  Kamu bisa membuat 10 orderan ke 10 alamat berbeda, bisa klik
+                  tombol diatas ya.
+                </p>
+              )}
+
+              <PaymentSummary
+                overallSubtotal={overallSubtotal}
+                overallDeliveryFee={overallDeliveryFee}
+                overallTotal={overallTotal}
+                orders={orders}
+                loadingCheckout={loadingCheckout}
+                onCheckout={async () => {
+                  const ref = collection(
+                    firestore,
+                    "customer",
+                    user.uid,
+                    "orders",
+                  );
+
+                  const orderDoc = await addDoc(ref, {
+                    sender: selectedContact,
+                    orders,
+                    paymentStatus: "draft",
+                    createdAt: serverTimestamp(),
+                  });
+
+                  const cartRef = collection(
+                    firestore,
+                    "shopping-cart",
+                    user.uid,
+                    "orders",
+                  );
+
+                  const cartSnap = await getDocs(cartRef);
+
+                  await Promise.all(cartSnap.docs.map((d) => deleteDoc(d.ref)));
+
+                  setOrders([]);
+
+                  localStorage.removeItem("selectedContactId");
+                  setSelectedContact(null);
+
+                  const phone = selectedContact?.phone ?? "";
+
+                  router.push(`/payment-method?draft=${orderDoc.id}-${phone}`);
+                }}
+              />
+            </Card>
           </div>
         </div>
       </div>
-
-      <EditAddressModal
-        isOpen={isEditing}
-        onClose={() => setIsEditing(false)}
-        currentAddress={currentAddress}
-        onSave={async (data) => {
-          await saveContact(data); // 🔥 simpan via useContactInfo
-          setSelectedContact(data); // 🔥 langsung jadi Data Pengirim aktif
-          setIsEditing(false);
-        }}
-      />
+      {isEditing && (
+        <EditAddressModal
+          isOpen={isEditing}
+          onClose={() => setIsEditing(false)}
+          currentAddress={currentAddress}
+          onSave={async (data) => {
+            await saveContact(data);
+            setSelectedContact(data);
+            setIsEditing(false);
+          }}
+        />
+      )}
     </>
   );
 };

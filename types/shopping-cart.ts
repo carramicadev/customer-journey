@@ -22,7 +22,7 @@ export interface RecipientInfo {
   receiverName: string;
   receiverPhone: string;
   address: string;
-  koordinateReceiver: {
+  koordinateReceiver?: {
     lat: number;
     lng: number;
   };
@@ -66,6 +66,8 @@ export interface Order {
 
   /** validasi data order */
   dataComplete?: boolean;
+
+  sendToSelf?: boolean; // 🔥 TAMBAH INI
 }
 
 /* ================= SHIPPING ================= */

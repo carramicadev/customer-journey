@@ -19,7 +19,7 @@ const ReceiverCard: React.FC<ReceiverCardProps> = ({
   return (
     <div
       className={`cursor-pointer rounded-lg border p-4 ${
-        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+        isSelected ? "border-primary bg-green-50" : "border-gray-200 bg-white"
       }`}
       onClick={onSelect}
     >

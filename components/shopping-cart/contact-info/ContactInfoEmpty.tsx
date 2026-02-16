@@ -14,7 +14,7 @@ export default function ContactInfoEmpty({ onSelect }: Props) {
   return (
     <Card className="space-y-4 p-6">
       <div className="flex items-center gap-2">
-        <CheckCircle className="h-6 w-6 text-gray-300" />
+        <CheckCircle className="size-6 text-gray-300" />
         <h2 className="text-lg font-semibold">Data Pengirim</h2>
       </div>
 

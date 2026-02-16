@@ -24,7 +24,10 @@ interface Address {
   id: string;
   name: string;
   phone: string;
-  address: string;
+
+  address: string; // 🔥 alamat manual
+  pinAddress: string; // 🔥 TAMBAH INI (hasil pin point)
+
   district: string;
   postalCode: string;
   coordinate: {
@@ -52,6 +55,7 @@ export default function AddressDialog({
     name: "",
     phone: "",
     address: "",
+    pinAddress: "",
     district: "",
     postalCode: "",
     coordinate: { lat: 0, lng: 0 },
@@ -156,8 +160,10 @@ export default function AddressDialog({
           />
 
           <MapComponent
-            setCoordinate={(c) => setFormData((p) => ({ ...p, coordinate: c }))}
             coordinate={formData.coordinate}
+            address={formData.address} // 🔥 TAMBAH INI
+            setCoordinate={(c) => setFormData((p) => ({ ...p, coordinate: c }))}
+            setAddress={(addr) => setFormData((p) => ({ ...p, address: addr }))}
             errors={errors}
             setErrors={setErrors}
           />

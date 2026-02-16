@@ -1,23 +1,21 @@
-// utils/prepareTransactionData.ts
-
 import { Order } from "@/types/shopping-cart";
 import { ContactInfo } from "@/types/contact-info";
 
-/**
- * ===============================
- * PREPARE MIDTRANS TRANSACTION DATA
- * ===============================
- * ⚠️ LOGIC 100% IDENTIK dengan yang ada di page.tsx
- * ❌ Tidak ada perubahan behavior
- */
 export const prepareTransactionData = (
   orders: Order[],
-  orderId: string,
+  invoiceId: string,
   contactInfo?: ContactInfo,
 ) => {
-  /* ================= FLATTEN PRODUCTS ================= */
+  const now = new Date();
 
-  const items = orders.flatMap((order) =>
+  const time =
+    String(now.getHours()).padStart(2, "0") +
+    String(now.getMinutes()).padStart(2, "0") +
+    String(now.getSeconds()).padStart(2, "0");
+
+  const finalOrderId = `ORDER_${invoiceId}_${time}`;
+
+  const products = orders.flatMap((order) =>
     order.products.map((product) => ({
       id: product.id,
       name: product.name,
@@ -26,32 +24,32 @@ export const prepareTransactionData = (
     })),
   );
 
-  /* ================= DELIVERY FEES ================= */
-
-  const deliveryFees = orders.map((order) => ({
+  const delivery = orders.map((order) => ({
     id: `delivery-${order.id}`,
     name: `Delivery Fee (${order.courier})`,
     price: order.deliveryFee,
     quantity: 1,
   }));
 
-  /* ================= TOTAL AMOUNT ================= */
+  const item_details = [...products, ...delivery];
 
-  const gross_amount = [...items, ...deliveryFees].reduce(
+  const gross_amount = item_details.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
 
-  /* ================= RETURN FORMAT ================= */
-
   return {
-    amount: gross_amount,
-    item: [...items, ...deliveryFees],
-    customer_details: {
-      first_name: contactInfo?.name || "Customer",
-      phone: contactInfo?.phone || "",
-      email: contactInfo?.email || "customer@example.com",
+    transaction_details: {
+      order_id: finalOrderId,
+      gross_amount,
     },
-    id: `CUSTOMER_ORDER_${orderId}`,
+
+    item_details,
+
+    customer_details: {
+      first_name: contactInfo?.name ?? "Customer",
+      phone: contactInfo?.phone ?? "",
+      email: contactInfo?.email ?? "customer@email.com",
+    },
   };
 };

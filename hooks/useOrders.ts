@@ -1,5 +1,6 @@
 "use client";
-
+import { emptyRecipient } from "@/utils/emptyRecipient";
+import { query, orderBy } from "firebase/firestore";
 import { useEffect, useState, useCallback } from "react";
 import {
   addDoc,
@@ -8,49 +9,14 @@ import {
   serverTimestamp,
   deleteDoc,
   doc,
+  updateDoc,
 } from "firebase/firestore";
 import { firestore } from "@/components/FirebaseFrovider";
 import { useRouter } from "next/navigation";
 import { Order, ShippingService } from "@/types/shopping-cart";
-
-/* ================= TYPES ================= */
-
-// interface RecipientInfo {
-//   receiverName: string;
-//   receiverPhone: string;
-//   address: string;
-//   koordinateReceiver: {
-//     lat: number;
-//     lng: number;
-//   };
-// }
-
-// interface Product {
-//   id: string;
-//   name: string;
-//   price: number;
-//   quantity: number;
-//   imageUrl: string;
-//   stok: number;
-//   sku: string;
-//   weight: number;
-//   height: number;
-//   width: number;
-//   length: number;
-// }
-
-// export interface Order {
-//   id: string;
-//   recipient: RecipientInfo;
-//   products: Product[];
-//   courier: string;
-//   deliveryFee: number;
-//   giftCardMessage: string;
-//   isEditing: boolean;
-//   dataCourier?: any;
-//   listService?: any[];
-//   dataComplete?: boolean;
-// }
+import { ContactInfo } from "@/types/contact-info";
+import { RecipientInfo } from "@/types/shopping-cart";
+import { reset } from "numeral";
 
 /* ================= HOOK ================= */
 
@@ -58,31 +24,70 @@ export const useOrders = (userId?: string) => {
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
-  //   const [currentOrder, setCurrentOrder] = useState<number>(0);
+
+  const resetReceiverAt = async (index: number) => {
+    if (!userId) return;
+
+    const orderId = orders[index]?.id;
+    if (!orderId) return;
+
+    const emptyRecipient = {
+      receiverName: "",
+      receiverPhone: "",
+      address: "",
+      // koordinateReceiver: undefined,
+    };
+
+    // 🔥 1. UPDATE STATE
+    setOrders((prev) =>
+      prev.map((order, i) =>
+        i === index
+          ? {
+              ...order,
+              recipient: emptyRecipient,
+              sendToSelf: false,
+              isEditing: true,
+              dataComplete: false,
+            }
+          : order,
+      ),
+    );
+
+    // 🔥 2. UPDATE FIRESTORE (INI KUNCI)
+    await updateDoc(
+      doc(firestore, "shopping-cart", userId, "orders", orderId),
+      {
+        recipient: emptyRecipient,
+        sendToSelf: false,
+        isEditing: true,
+        dataComplete: false,
+      },
+    );
+  };
 
   /* ================= FETCH ORDERS ================= */
 
   useEffect(() => {
     if (!userId) return;
 
-    const ref = collection(firestore, "shopping-cart", userId, "orders");
+    // const ref = collection(firestore, "shopping-cart", userId, "orders");
+
+    const ref = query(
+      collection(firestore, "shopping-cart", userId, "orders"),
+      orderBy("createdAt", "asc"),
+    );
 
     const unsubscribe = onSnapshot(ref, (snapshot) => {
-      //   const updated = snapshot.docs.map((doc) => ({
-      //     id: doc.id,
-      //     ...doc.data(),
-      //     deliveryFee: doc.data()?.deliveryFee ?? 0,
-      //   })) as Order[];
       const updated = snapshot.docs.map((doc) => {
         const data = doc.data();
 
         return {
           id: doc.id,
-          recipient: data.recipient ?? {
-            receiverName: "",
-            receiverPhone: "",
-            address: "",
-            koordinateReceiver: { lat: 0, lng: 0 },
+          recipient: {
+            receiverName: data.recipient?.receiverName ?? "",
+            receiverPhone: data.recipient?.receiverPhone ?? "",
+            address: data.recipient?.address ?? "",
+            koordinateReceiver: data.recipient?.koordinateReceiver ?? undefined,
           },
           products: data.products ?? [],
           courier: data.courier ?? "",
@@ -92,6 +97,7 @@ export const useOrders = (userId?: string) => {
           dataCourier: data.dataCourier,
           listService: data.listService,
           dataComplete: data.dataComplete,
+          sendToSelf: data.sendToSelf ?? false,
         };
       });
 
@@ -110,17 +116,13 @@ export const useOrders = (userId?: string) => {
       const ref = collection(firestore, "shopping-cart", userId, "orders");
 
       const docRef = await addDoc(ref, {
-        recipient: {
-          receiverName: "",
-          receiverPhone: "",
-          address: "",
-          koordinateReceiver: { lat: 0, lng: 0 },
-        },
+        recipient: emptyRecipient,
         courier: "",
         giftCardMessage: "",
         isEditing: false,
         products: [],
         deliveryFee: 0,
+        dataComplete: false,
         createdAt: serverTimestamp(),
       });
 
@@ -128,17 +130,13 @@ export const useOrders = (userId?: string) => {
         ...prev,
         {
           id: docRef.id,
-          recipient: {
-            receiverName: "",
-            receiverPhone: "",
-            address: "",
-            koordinateReceiver: { lat: 0, lng: 0 },
-          },
+          recipient: emptyRecipient,
           courier: "",
           giftCardMessage: "",
           isEditing: false,
           products: [],
           deliveryFee: 0,
+          dataComplete: false,
         },
       ]);
     } catch (err) {
@@ -147,46 +145,102 @@ export const useOrders = (userId?: string) => {
   };
 
   /* ================= PRODUCT QTY ================= */
+  const resetCourierFields = (order: Order) => ({
+    ...order,
+    courier: "",
+    deliveryFee: 0,
+    dataCourier: undefined,
+    isEditing: true,
+    dataComplete: false,
+  });
 
   const handleQuantityChange = useCallback(
-    (orderIndex: number, productIndex: number, delta: number) => {
+    async (orderIndex: number, productIndex: number, delta: number) => {
+      const order = orders?.[orderIndex];
+      if (!order) return; // 🔥 FIX 1
+      const product = order.products?.[productIndex];
+      if (!product) return; // 🔥 FIX 2
+
+      if (delta > 0 && product.quantity >= product.stok) {
+        alert(`Stok tersisa ${product.stok}`);
+        return;
+      }
       setOrders((prev) =>
         prev.map((order, oIdx) => {
           if (oIdx !== orderIndex) return order;
 
-          return {
+          const updatedProducts = order.products.map((product, pIdx) =>
+            pIdx === productIndex
+              ? {
+                  ...product,
+                  quantity: Math.max(1, product.quantity + delta),
+                }
+              : product,
+          );
+
+          // 🔥 SIMPAN KE FIRESTORE
+          if (userId) {
+            updateDoc(
+              doc(firestore, "shopping-cart", userId, "orders", order.id),
+              {
+                products: updatedProducts,
+                courier: "",
+                deliveryFee: 0,
+                dataCourier: null,
+                isEditing: true,
+                dataComplete: false,
+              },
+            );
+          }
+
+          return resetCourierFields({
             ...order,
-            products: order.products.map((product, pIdx) =>
-              pIdx === productIndex
-                ? {
-                    ...product,
-                    quantity: Math.max(1, product.quantity + delta),
-                  }
-                : product,
-            ),
-            isEditing: true,
-            dataComplete: false,
-          };
+            products: updatedProducts,
+            // isEditing: true,
+            // dataComplete: false,
+          });
         }),
       );
     },
-    [],
+    [orders, userId],
   );
 
   /* ================= DELETE PRODUCT ================= */
+  const handleDeleteProduct = async (
+    orderIndex: number,
+    productIndex: number,
+  ) => {
+    const order = orders[orderIndex];
+    if (!order || !userId) return;
 
-  const handleDeleteProduct = (orderIndex: number, productIndex: number) => {
+    const updatedProducts = order.products.filter(
+      (_, idx) => idx !== productIndex,
+    );
+
+    // 🔥 1. Update state
     setOrders((prev) =>
-      prev.map((order, i) =>
+      prev.map((o, i) =>
         i === orderIndex
-          ? {
-              ...order,
-              products: order.products.filter((_, idx) => idx !== productIndex),
-              isEditing: true,
-              dataComplete: false,
-            }
-          : order,
+          ? resetCourierFields({
+              ...o,
+              products: updatedProducts,
+            })
+          : o,
       ),
+    );
+
+    // 🔥 2. Update Firestore (INI KUNCI)
+
+    await updateDoc(
+      doc(firestore, "shopping-cart", userId, "orders", order.id),
+      {
+        products: updatedProducts,
+        courier: "",
+        deliveryFee: 0,
+        dataCourier: null,
+        isEditing: true,
+        dataComplete: false,
+      },
     );
   };
 
@@ -198,16 +252,27 @@ export const useOrders = (userId?: string) => {
 
   /* ================= GIFT CARD ================= */
 
-  const handleGiftCardMessageChange = (
+  const handleGiftCardMessageChange = async (
     index: number,
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
-    const { value } = e.target;
+    const value = e.target.value;
+    const order = orders[index];
+    if (!order || !userId) return;
 
+    // 1️⃣ update state
     setOrders((prev) =>
-      prev.map((order, i) =>
-        i === index ? { ...order, giftCardMessage: value } : order,
-      ),
+      prev.map((o, i) => (i === index ? { ...o, giftCardMessage: value } : o)),
+    );
+
+    // 2️⃣ update Firestore (INI KUNCI)
+    await updateDoc(
+      doc(firestore, "shopping-cart", userId, "orders", order.id),
+      {
+        giftCardMessage: value,
+        isEditing: true,
+        dataComplete: false,
+      },
     );
   };
 
@@ -265,11 +330,53 @@ export const useOrders = (userId?: string) => {
     }
   };
 
+  const applySenderAsReceiver = async (
+    index: number,
+    sender: ContactInfo,
+    // userId?: string,
+  ) => {
+    setOrders((prev: Order[]) =>
+      prev.map((order, i) => {
+        if (i !== index) return order;
+        if (!sender.coordinate) return order;
+        const mapped: RecipientInfo = {
+          receiverName: sender.name,
+          receiverPhone: sender.phone,
+          address: sender.address,
+          koordinateReceiver: sender.coordinate,
+        };
+
+        // 🔥 SAVE KE FIRESTORE
+        if (userId) {
+          updateDoc(
+            doc(firestore, "shopping-cart", userId, "orders", order.id),
+            {
+              recipient: mapped,
+              sendToSelf: true,
+              isEditing: true,
+              dataComplete: false,
+            },
+          );
+        }
+
+        return {
+          ...order,
+          recipient: mapped,
+          sendToSelf: true,
+          isEditing: true,
+          dataComplete: false,
+        };
+      }),
+    );
+  };
+
   /* ================= RETURN ================= */
 
   return {
     orders,
     setOrders,
+    resetReceiverAt,
+    applySenderAsReceiver,
 
     // currentOrder,
     // setCurrentOrder,

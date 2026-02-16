@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer";
+import HeaderVisibility from "@/components/header/HeaderVisibility";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,7 +35,7 @@ export default function RootLayout({
         <AuthProvider>
           <CategoriesProvider>
             {/* ✅ HEADER GLOBAL */}
-            <Header />
+            <HeaderVisibility />
 
             {/* ✅ KONTEN HALAMAN */}
             <Suspense>

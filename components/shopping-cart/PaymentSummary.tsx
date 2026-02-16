@@ -31,8 +31,8 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
     orders.length < 1;
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-md">
-      <h2 className="mb-4 text-xl font-semibold">Ringkasan Pembayaran</h2>
+    <div>
+      {/* <h2 className="mb-4 text-xl font-semibold">Ringkasan Pembayaran</h2> */}
 
       <div className="space-y-2">
         <div className="flex justify-between">
@@ -41,7 +41,12 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
         </div>
 
         <div className="flex justify-between">
-          <span>Total Delivery Fee</span>
+          <span>Total Discount</span>
+          <span>Rp 0</span>
+        </div>
+
+        <div className="flex justify-between">
+          <span>Delivery Fee</span>
           <span>Rp {overallDeliveryFee.toLocaleString()}</span>
         </div>
 
@@ -56,8 +61,8 @@ const PaymentSummary: React.FC<PaymentSummaryProps> = ({
         onClick={onCheckout}
         className={`${
           isDisabled
-            ? "mt-4 w-full cursor-not-allowed rounded-md bg-gray-400 px-4 py-2 text-white"
-            : "mt-4 w-full rounded-md bg-green-600 px-4 py-2 text-white"
+            ? "mt-4 w-full cursor-not-allowed rounded-md bg-gray-400 px-4 py-3 text-white"
+            : "mt-4 w-full rounded-md bg-primary px-4 py-3 text-white hover:bg-primary/90"
         }`}
       >
         {loadingCheckout ? "loading..." : "Lanjut ke Pembayaran"}

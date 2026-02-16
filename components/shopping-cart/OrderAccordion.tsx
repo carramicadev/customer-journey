@@ -7,6 +7,8 @@ import {
   ChevronUpIcon,
 } from "@heroicons/react/20/solid";
 import { Order } from "@/types/shopping-cart";
+import { isRecipientComplete } from "@/utils/isRecipientComplete";
+import { Trash2, TrashIcon } from "lucide-react";
 
 interface OrderAccordionProps {
   orders: Order[];
@@ -26,116 +28,135 @@ const OrderAccordion: React.FC<OrderAccordionProps> = ({
 }) => {
   return (
     <>
-      {orders.map((order, index) => (
-        <div
-          key={index}
-          className={`${
-            order.recipient?.address &&
-            order.recipient?.receiverName &&
-            order.recipient?.receiverPhone &&
-            contactIsCompleted &&
-            order.products.length > 0 &&
-            order.courier
-              ? "mb-6 rounded-lg bg-green-100 p-6 shadow-md"
-              : "mb-6 rounded-lg bg-white p-6 shadow-md"
-          }`}
-        >
+      {orders.map((order, index) => {
+        const isComplete =
+          isRecipientComplete(order.recipient) &&
+          contactIsCompleted &&
+          order.products.length > 0 &&
+          Boolean(order.courier);
+
+        return (
           <div
-            className="flex cursor-pointer items-center justify-between"
-            onClick={() => onToggleAccordion(index)}
+            key={index}
+            className={`mb-6 rounded-xl p-6 shadow-md ${
+              isComplete ? "border-2 border-green-600 bg-green-50" : "bg-white"
+            }`}
           >
-            <div className="flex items-center justify-start">
-              <h2 className="text-xl font-semibold">Orderan {index + 1}</h2>
+            {/* ================= HEADER ================= */}
+            <div
+              className="flex cursor-pointer items-center justify-between"
+              onClick={() => onToggleAccordion(index)}
+            >
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">Orderan {index + 1}</h2>
 
-              <CheckCircleIcon
-                className={`${
-                  order.recipient?.address &&
-                  order.recipient?.receiverName &&
-                  order.recipient?.receiverPhone &&
-                  contactIsCompleted &&
-                  order.products.length > 0 &&
-                  order.courier
-                    ? "ml-4 h-6 w-6 text-green-800"
-                    : "ml-4 h-6 w-6 text-gray-800"
-                }`}
-              />
+                <CheckCircleIcon
+                  className={`size-6 ${
+                    isComplete ? "text-green-700" : "text-gray-400"
+                  }`}
+                />
 
-              <p
-                className={`${
-                  order.recipient?.address &&
-                  order.recipient?.receiverName &&
-                  order.recipient?.receiverPhone &&
-                  contactIsCompleted &&
-                  order.products.length > 0 &&
-                  order.courier
-                    ? "text-sm font-semibold text-green-800"
-                    : "text-sm font-semibold text-gray-500"
-                }`}
-              >
-                {order.recipient?.address &&
-                order.recipient?.receiverName &&
-                order.recipient?.receiverPhone &&
-                contactIsCompleted &&
-                order.products.length > 0 &&
-                order.courier
-                  ? "Data Lengkap"
-                  : "Data Belum Lengkap"}
-              </p>
+                <span
+                  className={`text-sm font-semibold ${
+                    isComplete ? "text-green-700" : "text-gray-500"
+                  }`}
+                >
+                  {isComplete ? "Data Lengkap" : "Data Belum Lengkap"}
+                </span>
+              </div>
+
+              {expandedOrderIndex === index ? (
+                <ChevronUpIcon className="size-6 text-gray-700" />
+              ) : (
+                <ChevronDownIcon className="size-6 text-gray-700" />
+              )}
             </div>
 
-            {expandedOrderIndex === index ? (
-              <ChevronUpIcon className="ml-4 h-8 w-8 text-gray-800" />
-            ) : (
-              <ChevronDownIcon className="ml-4 h-8 w-8 text-gray-800" />
+            {/* ================= CONTENT ================= */}
+            {expandedOrderIndex === index && (
+              <div className="mt-6 space-y-6">
+                {/* ===== DATA PENERIMA ===== */}
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <p className="text-sm text-gray-500">Nama Penerima</p>
+                    <p className="font-semibold">
+                      {order.recipient.receiverName}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500">No Hp</p>
+                    <p className="font-semibold">
+                      {order.recipient.receiverPhone}
+                    </p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-500">Alamat Penerima</p>
+                    <p className="font-semibold">{order.recipient.address}</p>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-500">Gift Card Message</p>
+                    <p className="font-medium">
+                      {order.giftCardMessage || "-"}
+                    </p>
+                  </div>
+                </div>
+
+                <hr />
+
+                {/* ===== TABEL PRODUK ===== */}
+                <div>
+                  <div className="grid grid-cols-4 text-sm font-semibold text-gray-600">
+                    <span>Order</span>
+                    <span>Banyak</span>
+                    <span>Harga</span>
+                    <span>Jumlah</span>
+                  </div>
+
+                  {order.products.map((product, pIndex) => (
+                    <div key={pIndex} className="mt-3 grid grid-cols-4 text-sm">
+                      <span>{product.name}</span>
+                      <span>{product.quantity}</span>
+                      <span>Rp {product.price.toLocaleString()}</span>
+                      <span>
+                        Rp {(product.price * product.quantity).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <hr />
+
+                {/* ===== KURIR ===== */}
+                <div>
+                  <p className="text-sm text-gray-500">Kurir</p>
+
+                  <div className="mt-2 flex justify-between text-sm font-medium">
+                    <span>
+                      {order.dataCourier?.courier_name} -{" "}
+                      {order.dataCourier?.courier_service_name}
+                    </span>
+                    <span>Rp {order.deliveryFee.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* ===== DELETE BUTTON ===== */}
+                <div className="flex justify-end border-t pt-4">
+                  <button
+                    onClick={() => onDeleteOrder(index)}
+                    className="flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                  >
+                    <Trash2 className="size-6" />
+                    Hapus Order
+                  </button>
+                </div>
+              </div>
             )}
           </div>
-
-          {expandedOrderIndex === index && (
-            <div className="mt-4">
-              <div className="space-y-2">
-                <p>
-                  <strong>Nama Penerima:</strong> {order.recipient.receiverName}
-                </p>
-                <p>
-                  <strong>No. HP:</strong> {order.recipient.receiverPhone}
-                </p>
-                <p>
-                  <strong>Kurir:</strong> {order.courier}
-                </p>
-                <p>
-                  <strong>Alamat Penerima:</strong> {order.recipient.address}
-                </p>
-                <p>
-                  <strong>Gift Card Message:</strong>{" "}
-                  {order.giftCardMessage || "N/A"}
-                </p>
-              </div>
-
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold">Order</h3>
-                {order.products.map((product: any, pIndex: number) => (
-                  <div
-                    key={pIndex}
-                    className="mb-2 flex items-center justify-between"
-                  >
-                    <span>{product.name}</span>
-                    <span>
-                      {product.quantity} x Rp {product.price.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                className="mt-4 rounded-md bg-red-500 px-4 py-2 text-white"
-                onClick={() => onDeleteOrder(index)}
-              >
-                Hapus Order
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 };

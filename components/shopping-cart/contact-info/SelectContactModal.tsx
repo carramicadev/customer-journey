@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -42,6 +43,9 @@ export default function SelectContactModal({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Konfirmasi Hapus</DialogTitle>
+            <DialogDescription>
+              Konfirmasi penghapusan data Pengirim
+            </DialogDescription>
           </DialogHeader>
 
           <p className="text-sm">
@@ -57,6 +61,7 @@ export default function SelectContactModal({
             <Button
               variant="destructive"
               onClick={() => {
+                console.log("CONFIRM DELETE ID:", confirm);
                 onDelete(confirm!.id!);
                 setConfirm(null);
               }}
@@ -73,7 +78,7 @@ export default function SelectContactModal({
         {contacts.length === 0 ? (
           <p className="mb-4 text-sm text-gray-500">Belum Ada Data Pengirim</p>
         ) : (
-          <div className="space-y-3">
+          <div className="max-h-[60vh] w-full max-w-4xl space-y-3 overflow-y-auto pr-1">
             {contacts.map((c, i) => (
               <Card
                 // key={c.id ?? i}

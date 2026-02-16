@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useRef,
+  useMemo,
+  useEffect,
+} from "react";
 import {
   GoogleMap,
   useJsApiLoader,
@@ -15,7 +21,9 @@ export interface Coordinate {
 
 interface MyComponentProps {
   setCoordinate: (coordinate: Coordinate) => void;
+  setAddress: (address: string) => void; // 🔥 TAMBAH
   coordinate: Coordinate;
+  address: string;
   setErrors: (errors: Record<string, string>) => void;
   errors: Record<string, string>;
 }
@@ -37,7 +45,9 @@ const libraries: "places"[] = ["places"];
 
 const MapComponent: React.FC<MyComponentProps> = ({
   setCoordinate,
+  setAddress,
   coordinate,
+  address,
   setErrors,
   errors,
 }) => {
@@ -46,9 +56,16 @@ const MapComponent: React.FC<MyComponentProps> = ({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries, // Use the constant here
   });
+  const [autoText, setAutoText] = useState("");
+  useEffect(() => {
+    if (address && address !== autoText) {
+      setAutoText(address);
+    }
+  }, [address]);
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<Coordinate | null>(null);
+
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
@@ -63,11 +80,26 @@ const MapComponent: React.FC<MyComponentProps> = ({
     if (event.latLng) {
       const lat = event.latLng.lat();
       const lng = event.latLng.lng();
-      setMarker({ lat, lng });
-      setCoordinate({
+
+      const pos = {
         lat: parseFloat(lat.toFixed(6)),
         lng: parseFloat(lng.toFixed(6)),
+      };
+
+      setMarker(pos);
+      setCoordinate(pos);
+
+      // 🔥 REVERSE GEOCODE DAN KIRIM KE PARENT
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: pos }, (results, status) => {
+        if (status === "OK" && results && results[0]) {
+          const formattedAddress = results[0].formatted_address;
+
+          // 🔥 INI BARIS PALING PENTING
+          setAddress(formattedAddress);
+        }
       });
+
       setErrors({
         ...errors,
         koordinate: "",
@@ -78,16 +110,32 @@ const MapComponent: React.FC<MyComponentProps> = ({
   const handlePlaceChanged = () => {
     if (autocompleteRef.current) {
       const place = autocompleteRef.current.getPlace();
+
       if (place.geometry?.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        setMarker({ lat, lng });
-        setCoordinate({
+
+        const pos = {
           lat: parseFloat(lat.toFixed(6)),
           lng: parseFloat(lng.toFixed(6)),
+        };
+
+        setMarker(pos);
+        setCoordinate(pos);
+        map?.panTo?.(pos);
+
+        // 🔥 AMBIL ALAMAT DARI GOOGLE
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: pos }, (results, status) => {
+          if (status === "OK" && results && results[0]) {
+            const formattedAddress = results[0].formatted_address;
+
+            // 🔥 KIRIM KE AddModalAddress
+            setAddress(formattedAddress);
+          }
         });
-        map?.panTo?.({ lat, lng });
       }
+
       setErrors({
         ...errors,
         koordinate: "",
@@ -95,9 +143,35 @@ const MapComponent: React.FC<MyComponentProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (map && coordinate.lat && coordinate.lng) {
+      const pos = { lat: coordinate.lat, lng: coordinate.lng };
+
+      map.panTo(pos);
+      map.setZoom(16);
+      setMarker(pos);
+
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location: pos }, (results, status) => {
+        if (status === "OK" && results && results[0]) {
+          const formatted = results[0].formatted_address;
+
+          setAutoText(formatted); // isi input "Cari Alamat"
+          setAddress(formatted); // isi formData.address
+        }
+      });
+    }
+  }, [coordinate.lat, coordinate.lng, map]);
+
+  // 🔥 SINKRONISASI LANGSUNG DARI PARENT ADDRESS
+
   return isLoaded ? (
     <>
-      <label>Silahkan cari titik koordinat alamat anda!</label>
+      <label>Pin Point Alamat</label>
+      <p className="text-xs text-gray-400 ">
+        Drag pin point untuk menentukan titik alamat
+      </p>
+
       <Autocomplete
         onLoad={(ref: google.maps.places.Autocomplete) => {
           autocompleteRef.current = ref;
@@ -105,9 +179,11 @@ const MapComponent: React.FC<MyComponentProps> = ({
         onPlaceChanged={handlePlaceChanged}
       >
         <input
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+          value={autoText}
+          onChange={(e) => setAutoText(e.target.value)}
+          className="mb-2 mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
           type="text"
-          placeholder="Cari daerah anda"
+          placeholder="Cari Alamat"
           style={{ height: "40px", padding: "10px" }}
         />
       </Autocomplete>
@@ -122,14 +198,6 @@ const MapComponent: React.FC<MyComponentProps> = ({
       >
         {marker && <Marker position={marker} />}
       </GoogleMap>
-      {coordinate.lat && (
-        <>
-          <div className="input-note">latitude: {coordinate.lat}</div>
-          <div style={{ marginBottom: "20px" }} className="input-note">
-            longitude: {coordinate.lng}
-          </div>
-        </>
-      )}
     </>
   ) : (
     <></>

@@ -14,7 +14,7 @@ interface ReceiverModalProps {
 
   onClose: () => void;
   onSelectReceiver: (index: number) => void;
-  onConfirmReceiver: (orderIndex: number) => void;
+  onConfirmReceiver: () => void;
   onAddNewAddress: () => void;
 
   orderIndex: number;
@@ -35,7 +35,7 @@ const ReceiverModal: React.FC<ReceiverModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="mb-4 text-xl font-bold">Pilih data penerima</h2>
 
-      <div className="space-y-4">
+      <div className="max-h-[60vh] w-full max-w-4xl space-y-4 overflow-y-auto pr-1">
         {addresses.map((item, i) => (
           <ReceiverCard
             key={i}
@@ -48,16 +48,17 @@ const ReceiverModal: React.FC<ReceiverModalProps> = ({
 
       <button
         onClick={onAddNewAddress}
-        className="mb-6 mt-6 w-full rounded-lg bg-blue-600 py-2 text-white hover:bg-blue-700"
+        className="my-4 w-full rounded-lg bg-tertiary py-2 text-white hover:bg-tertiary/90"
       >
         Add New Address
       </button>
 
-      <div className="mt-4">
+      <div>
         <button
           disabled={!tempReceiver}
-          onClick={() => onConfirmReceiver(orderIndex)}
-          className="w-full rounded bg-green-600 px-4 py-2 text-white"
+          // onClick={() => onConfirmReceiver(orderIndex)}
+          onClick={onConfirmReceiver}
+          className="w-full rounded bg-primary px-4 py-2 text-white"
         >
           Confirm Selection
         </button>

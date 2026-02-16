@@ -14,7 +14,10 @@ interface Address {
   id: string;
   name: string;
   phone: string;
-  address: string;
+
+  address: string; // 🔥 alamat manual
+  pinAddress: string; // 🔥 TAMBAH INI (hasil pin point)
+
   district: string;
   postalCode: string;
   coordinate: {
@@ -51,7 +54,8 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   currentAddress,
   onSave,
 }) => {
-  console.log(currentAddress);
+  // console.log(currentAddress);
+  const [isSelecting, setIsSelecting] = useState(false);
 
   const { user } = useAuth();
   const [formData, setFormData] = useState<Address>({
@@ -59,6 +63,7 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
     name: "",
     phone: "",
     address: "",
+    pinAddress: "",
     district: "",
     postalCode: "",
     coordinate: {
@@ -71,21 +76,23 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   useEffect(() => {
     if (currentAddress) {
       setFormData(currentAddress);
+
+      // 🔥 TAMBAH INI
+      setQuery(currentAddress.district || "");
     } else {
-      // 🔥 RESET TOTAL FORM SAAT ADD NEW
       setFormData({
         id: "",
         name: "",
         phone: "",
         address: "",
+        pinAddress: "",
         district: "",
         postalCode: "",
-        coordinate: {
-          lat: 0,
-          lng: 0,
-        },
+        coordinate: { lat: 0, lng: 0 },
         type: "both",
       });
+
+      setQuery(""); // 🔥 reset query
     }
   }, [currentAddress]);
 
@@ -104,34 +111,44 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const value = e.target.value;
+
+    // 🔥 JIKA SEDANG SELECT, STOP TOTAL
+    if (isSelecting) return;
+
     setQuery(value);
   };
 
+  const isQueryLocked = Boolean(formData.district);
+
   // call getDistrict
   useEffect(() => {
+    // 🔥 STOP TOTAL JIKA SEDANG SELECT
+    if (isSelecting) return;
+
     if (query !== "") {
       const timer = setTimeout(() => {
         async function getKec() {
           setIsLoading(true);
           const helloWorld = httpsCallable(functions, "getDistrict");
+
           try {
             const result = await helloWorld({ value: query });
-            // console.log(result.data?.items?.areas)
             setResults((result?.data as any)?.items?.areas ?? []);
           } catch (error) {
             console.error("Error calling function:", error);
             setResults([]);
           }
+
           setIsLoading(false);
         }
         getKec();
       }, 500);
 
-      return () => {
-        clearTimeout(timer);
-      };
+      return () => clearTimeout(timer);
+    } else {
+      setResults([]);
     }
-  }, [query]);
+  }, [query, isSelecting]);
 
   // Disable body scroll when modal is open
   useEffect(() => {
@@ -182,9 +199,10 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
 
   const validateCoordinate = (): Record<string, string> => {
     const newErrors: Record<string, string> = {};
-    if (!formData.coordinate?.lat || !formData.coordinate?.lng) {
+    if (formData.coordinate.lat === 0 || formData.coordinate.lng === 0) {
       newErrors.coordinate = "Coordinate is required.";
     }
+
     return newErrors;
   };
 
@@ -216,8 +234,12 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="z-50 flex h-[90vh] max-h-[600px] w-full max-w-lg flex-col rounded-lg bg-white shadow-lg">
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 ${
+        isOpen ? "pointer-events-auto" : "pointer-events-none"
+      }`}
+    >
+      <div className="z-50 flex h-[90vh] max-h-[600px] w-full max-w-4xl flex-col rounded-lg bg-white shadow-lg">
         {/* Modal Header */}
         <div className="border-b p-6">
           <h3 className="text-xl font-bold">
@@ -273,44 +295,36 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
               <textarea
                 rows={3}
                 name="address"
-                value={formData.address}
+                value={formData.address} // alamat manual
                 onChange={handleInputChange}
                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 required
               />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+              {errors.pinAddress && (
+                <p className="mt-1 text-sm text-red-600">{errors.pinAddress}</p>
               )}
             </div>
 
             {/* City Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Kecamatan
-              </label>
-              <input
-                type="text"
-                value={formData?.district}
-                // onChange={handleInputChangeDistrict}
-                placeholder="Kecamatan"
-                disabled
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
               <div className="relative mt-6 w-full">
                 <label className="block text-sm font-medium text-gray-700">
-                  Cari Kecamatan
+                  Kecamatan / Kota / Provinsi / Kode Pos
                 </label>
+                <p className="text-xs text-gray-400">
+                  Pilih wilayah, lalu isi alamat lengkap secara manual
+                </p>
                 {/* Search Input */}
                 <input
                   type="text"
                   value={query}
                   onChange={handleInputChangeDistrict}
-                  placeholder="Search for an area..."
+                  placeholder="Cari kecamatan, kota, provinsi, atau kode pos"
                   className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
                 {/* Results Dropdown */}
-                {(isLoading || results.length > 0) && (
+                {!isQueryLocked && (isLoading || results.length > 0) && (
                   <div className="absolute z-10 mt-2 w-full rounded-lg border border-gray-300 bg-white shadow-lg">
                     {/* Loader */}
                     {isLoading && (
@@ -328,22 +342,62 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
                           <div
                             key={item.id}
                             className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                district: item?.name,
-                                postalCode: String(item?.postal_code),
-                              });
-                              setErrors({
-                                ...errors,
-                                district: "",
-                                postalCode: "",
-                              });
-                              // setQuery(item.name); // Set the input value to the selected result's name
-                              setResults([]); // Clear the results
+                            onClick={async () => {
+                              setIsSelecting(true);
+
+                              const fullText = `${item.name}, ${item.administrative_division_level_2_name}, ${item.administrative_division_level_1_name}, Indonesia`;
+
+                              // 1. KUNCI QUERY → tutup dropdown
+                              setResults([]);
+                              setQuery(item.name); // 🔥 tampilkan hanya nama kecamatan
+                              setFormData((prev) => ({
+                                ...prev,
+                                district: item.name,
+                                postalCode: String(item.postal_code),
+                              }));
+
+                              try {
+                                const geocoder = new google.maps.Geocoder();
+
+                                geocoder.geocode(
+                                  { address: fullText },
+                                  (results, status) => {
+                                    if (
+                                      status === "OK" &&
+                                      results &&
+                                      results[0]
+                                    ) {
+                                      const location =
+                                        results[0].geometry.location;
+                                      const lat = location.lat();
+                                      const lng = location.lng();
+
+                                      // 🔥 HANYA SET COORDINATE, JANGAN SET ADDRESS
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        coordinate: {
+                                          lat: parseFloat(lat.toFixed(6)),
+                                          lng: parseFloat(lng.toFixed(6)),
+                                        },
+                                      }));
+                                    } else {
+                                      console.error("Geocode failed:", status);
+                                    }
+                                  },
+                                );
+                              } finally {
+                                setTimeout(() => {
+                                  setIsSelecting(false);
+                                }, 300);
+                              }
                             }}
                           >
                             <p className="text-sm text-gray-700">{item.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {item.administrative_division_level_2_name},{" "}
+                              {item.administrative_division_level_1_name},{" "}
+                              {item.postal_code}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -377,13 +431,31 @@ const EditAddressModal: React.FC<EditAddressModalProps> = ({
             {/* Map Component */}
             <div>
               <MapComponent
+                coordinate={formData.coordinate}
+                address={formData.pinAddress} // 🔥 TAMBAH INI
                 setCoordinate={(c) =>
                   setFormData((p) => ({ ...p, coordinate: c }))
                 }
-                coordinate={formData.coordinate}
+                setAddress={(addr) =>
+                  setFormData((p) => ({ ...p, pinAddress: addr }))
+                }
                 errors={errors}
                 setErrors={setErrors}
               />
+
+              {formData.coordinate.lat !== 0 && (
+                <div className="mt-4 rounded-md bg-gray-50 p-3 text-sm">
+                  <p className="font-semibold text-gray-700">
+                    Alamat Terpilih:
+                  </p>
+                  <p className="text-gray-500">{formData.pinAddress || "-"}</p>
+
+                  <p className="text-xs text-gray-400">
+                    Lat: {formData.coordinate.lat}, Lng:{" "}
+                    {formData.coordinate.lng}
+                  </p>
+                </div>
+              )}
 
               {errors.coordinate && (
                 <p className="mt-1 text-sm text-red-600">{errors.coordinate}</p>

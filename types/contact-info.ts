@@ -3,7 +3,9 @@ export interface ContactInfo {
 
   name: string;
   phone: string;
-  address: string;
+
+  address: string; // alamat manual
+  pinAddress?: string; // 🔥 TAMBAH
 
   district?: string;
   postalCode?: string;
@@ -14,6 +16,5 @@ export interface ContactInfo {
   };
 
   email?: string;
-
   type?: "sender" | "receiver" | "both";
 }

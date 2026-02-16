@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Product } from "@/types/shopping-cart";
+import Image from "next/image";
+import { Trash, Trash2 } from "lucide-react";
 
 interface OrderItemProps {
   product: Product;
@@ -27,78 +29,81 @@ const OrderItem: React.FC<OrderItemProps> = ({
   onDeleteProduct,
   setCurrentOrder,
 }) => {
+  const isOutOfStock = product.stok <= 0;
+
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center">
-          {/* Product Image */}
-          <img
+      <div className="mb-4 flex items-start gap-4 border-b pb-4">
+        <div
+          className={`flex flex-1 gap-4 ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+        >
+          {/* Image */}
+          <Image
             src={product.imageUrl}
             alt={product.name}
-            className="mr-4 h-16 w-16 rounded-md object-cover"
+            className={`size-20 rounded-md object-cover ${
+              isOutOfStock ? "grayscale" : ""
+            }`}
+            width={80}
+            height={80}
           />
-          <span>{product.name}</span>
+
+          {/* Info */}
+          <div className="flex flex-1 flex-col gap-1">
+            <div className="flex justify-between">
+              <p className="font-semibold text-green-800">{product.name}</p>
+              <div className="flex justify-end">
+                {/* {product.quantity >= product.stok && (
+                <p className="mt-1 text-xs text-red-600">Stok habis</p>
+              )} */}
+                {isOutOfStock && (
+                  <p className="text-xs font-semibold text-red-600">
+                    Stok Habis
+                  </p>
+                )}
+              </div>
+            </div>
+            <p className="line-clamp-2 text-xs text-gray-500">
+              {product.name || "Deskripsi produk"}
+            </p>
+
+            <p className="mt-1 text-sm font-semibold">
+              {product.quantity} x Rp {product.price.toLocaleString()}
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center">
-          {/* Quantity Adjustment */}
+        {/* Actions */}
+        <div className="flex flex-col items-end gap-2">
+          {/* Delete */}
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuantityChange(orderIndex, productIndex, -1);
-              setCurrentOrder(orderIndex);
-            }}
-            className="rounded-l-md bg-gray-200 px-2 py-1"
+            onClick={() => onDeleteProduct(orderIndex, productIndex)}
+            className="text-red-400 hover:text-red-600"
           >
-            -
+            <Trash2 size={16} />
           </button>
 
-          <span className="bg-gray-100 px-4 py-1">{product.quantity}</span>
-
-          <button
-            disabled={product.quantity >= product.stok}
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuantityChange(orderIndex, productIndex, 1);
-              setCurrentOrder(orderIndex);
-            }}
-            className="rounded-r-md bg-gray-200 px-2 py-1"
-          >
-            +
-          </button>
-
-          {/* Product Price */}
-          <span className="ml-4">Rp {product.price.toLocaleString()}</span>
-
-          {/* Delete Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteProduct(orderIndex, productIndex);
-              setCurrentOrder(orderIndex);
-            }}
-            className="ml-4 text-red-600"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+          {/* Qty Control */}
+          <div className="flex items-center rounded border">
+            <button
+              onClick={() => onQuantityChange(orderIndex, productIndex, -1)}
+              disabled={isOutOfStock}
+              className="px-2 py-1"
             >
-              <path
-                fillRule="evenodd"
-                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-        </div>
-      </div>
+              -
+            </button>
 
-      <div className="flex justify-end">
-        {product.quantity >= product.stok && (
-          <p className="mt-1 text-xs text-red-600">Stok habis</p>
-        )}
+            <span className="px-3">{product.quantity}</span>
+
+            <button
+              onClick={() => onQuantityChange(orderIndex, productIndex, 1)}
+              disabled={isOutOfStock || product.quantity >= product.stok}
+              className="px-2 py-1"
+            >
+              +
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

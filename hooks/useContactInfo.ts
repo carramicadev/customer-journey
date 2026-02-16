@@ -20,13 +20,30 @@ export const useContactInfo = (userId?: string) => {
   );
 
   const contactIsCompleted = Boolean(
-    selectedContact?.name && selectedContact?.phone,
+    selectedContact?.name &&
+      selectedContact?.phone &&
+      selectedContact?.address &&
+      selectedContact?.district &&
+      selectedContact?.postalCode &&
+      selectedContact?.coordinate?.lat &&
+      selectedContact?.coordinate?.lng,
   );
 
   const deleteContact = async (id: string) => {
-    if (!userId) return;
+    console.log("TRY DELETE CONTACT:", userId, id);
 
-    console.log("DELETE CONTACT:", userId, id); // 🔥 DEBUG
+    if (!userId) {
+      console.warn("DELETE ABORTED: userId undefined");
+      return;
+    }
+
+    if (!id) {
+      console.warn("DELETE ABORTED: id undefined");
+      return;
+    }
+
+    console.log("DELETE CONTACT:", userId, id);
+
     await deleteDoc(doc(firestore, "customer", userId, "address", id));
 
     if (selectedContact?.id === id) {
@@ -72,6 +89,26 @@ export const useContactInfo = (userId?: string) => {
 
     return () => unsub();
   }, [userId]);
+
+  // simpan ke localStorage setiap kali selectedContact berubah
+  useEffect(() => {
+    if (selectedContact?.id) {
+      localStorage.setItem("selectedContactId", selectedContact.id);
+    }
+  }, [selectedContact]);
+
+  // restore selected contact saat refresh
+  useEffect(() => {
+    if (!contacts.length) return;
+
+    const savedId = localStorage.getItem("selectedContactId");
+    if (!savedId) return;
+
+    const found = contacts.find((c) => c.id === savedId);
+    if (found) {
+      setSelectedContact(found);
+    }
+  }, [contacts]);
 
   /* ===== ADD CONTACT ===== */
   const addContact = async (data: ContactInfo) => {

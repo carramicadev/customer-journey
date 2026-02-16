@@ -32,18 +32,17 @@ export const useShippingRates = (
 
   useEffect(() => {
     const fetchShippingRates = async () => {
-      if (!orders || currentOrder === undefined || !orders?.[currentOrder])
-        return;
+      if (!orders || currentOrder === undefined) return;
 
       const currentOrderData = orders[currentOrder];
+
+      // 🔥 GUARD PALING ATAS
+      if (!currentOrderData?.isEditing) return;
 
       if (
         !currentOrderData?.products?.length ||
         !currentOrderData?.recipient?.koordinateReceiver?.lat ||
-        !currentOrderData?.recipient?.koordinateReceiver?.lng ||
-        !koordinateOrigin?.lat ||
-        !koordinateOrigin?.lng ||
-        !currentOrderData?.isEditing
+        !currentOrderData?.recipient?.koordinateReceiver?.lng
       ) {
         return;
       }
@@ -138,7 +137,7 @@ export const useShippingRates = (
             {
               ...current,
               dataComplete: true,
-              listService: listService[currentOrder],
+              // listService: listService[currentOrder],
             },
             { merge: true },
           );
