@@ -38,24 +38,36 @@ const PhoneAuth: React.FC = () => {
       inputRefs.current[index - 1]?.focus();
     }
   };
+
   // Set up reCAPTCHA
+  // const setUpRecaptcha = () => {
+  //   (window as any).recaptchaVerifier = new RecaptchaVerifier(
+  //     auth,
+  //     "recaptcha-container",
+  //     {
+  //       size: "normal",
+  //       callback: (response: any) => {
+  //         // reCAPTCHA solved, allow signInWithPhoneNumber.
+  //         // ...
+  //       },
+  //       // "expired-callback": () => {
+  //       //   // Response expired. Ask user to solve reCAPTCHA again.
+  //       //   // ...
+  //       // },
+  //     },
+  //   );
+  // };
+
   const setUpRecaptcha = () => {
+    if ((window as any).recaptchaVerifier) return;
+
     (window as any).recaptchaVerifier = new RecaptchaVerifier(
       auth,
       "recaptcha-container",
-      {
-        size: "normal",
-        callback: (response: any) => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-          // ...
-        },
-        // "expired-callback": () => {
-        //   // Response expired. Ask user to solve reCAPTCHA again.
-        //   // ...
-        // },
-      },
+      { size: "invisible" },
     );
   };
+
   const [loading, setLoading] = useState(false);
 
   // Handle sending OTP
@@ -86,10 +98,10 @@ const PhoneAuth: React.FC = () => {
     setLoading(true);
     try {
       // await confirmationResult.confirm(otp.join(""));
-      const user = await confirmationResult.confirm(otp.join(""));
+      // const user = await confirmationResult.confirm(otp.join(""));
 
-      document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
-
+      // document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
+      await confirmationResult.confirm(otp.join(""));
       alert("Phone number verified!");
       const redirect =
         new URLSearchParams(window.location.search).get("redirect") || "/";

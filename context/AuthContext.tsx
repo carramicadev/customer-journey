@@ -28,13 +28,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for authentication state changes
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
+
+      if (user) {
+        document.cookie = `auth-token=${user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
+      } else {
+        document.cookie =
+          "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.carramica.org";
+      }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 

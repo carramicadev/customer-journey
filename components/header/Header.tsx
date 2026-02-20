@@ -40,7 +40,7 @@ export default function Header({
       await signOut(auth);
 
       document.cookie =
-        "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.carramica.org";
 
       router.replace("/login");
     } catch (error) {
@@ -91,14 +91,14 @@ export default function Header({
         <nav className="mx-auto hidden gap-10 md:flex">
           <Button
             variant="ghost"
-            className="text-white hover:bg-white/10"
+            className="text-white hover:bg-white/10 hover:text-white"
             onClick={() => router.push("/")}
           >
             New Arrival
           </Button>
           <Button
             variant="ghost"
-            className="text-white hover:bg-white/10"
+            className="text-white hover:bg-white/10 hover:text-white"
             onClick={() => router.push("/all-product")}
           >
             All Products

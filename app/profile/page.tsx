@@ -177,7 +177,8 @@ const OrderHistoryPage: React.FC = () => {
       await signOut(auth);
 
       // 2. Hapus cookie auth (UNTUK MIDDLEWARE)
-      document.cookie = "auth=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      document.cookie =
+        "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.carramica.org";
 
       // 3. Redirect ke login
       router.replace("/login");
