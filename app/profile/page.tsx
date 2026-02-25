@@ -1,7 +1,6 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import Header from "../../components/header";
-// import { ChevronRightIcon } from "@heroicons/react/20/solid";
 import {
   ChevronRightIcon,
   ClipboardDocumentListIcon,
@@ -9,87 +8,38 @@ import {
   MapPinIcon,
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+
 import UserInfoPage from "./user-info";
 import AddressDataPage from "./address";
+
 import { signOut } from "firebase/auth";
 import { auth, firestore } from "@/components/FirebaseProvider";
 import { useRouter } from "next/navigation";
-import { collection, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
-interface Coordinate {
-  lat: number;
-  lng: number;
-}
 
-interface Product {
-  sku: string;
-  weight: number;
-  quantity: number;
-  length: number;
-  imageUrl: string;
-  price: number;
-  id: string;
-  width: number;
-  stok: number;
-  name: string;
-  height: number;
-}
-
-interface Recipient {
-  koordinateReceiver: Coordinate;
-  receiverPhone: string;
-  postalCode: string;
-  receiverName: string;
-  district: string;
-  address: string;
-  id: string;
-}
-
-interface Order {
-  listService: any[];
-  dataCourier: any;
-  courier: string;
-  deliveryFee: number;
-  id: string;
-  products: Product[];
-  isEditing: boolean;
-  dataComplete: boolean;
-  createdAt: any;
-  recipient: Recipient;
-  giftCardMessage?: string;
-}
-
-interface Sender {
-  name: string;
-  email: string;
-  address: string;
-  phone: string;
-}
-
-interface MidtransInfo {
-  token: string;
-  redirect_url: string;
-}
+/* ================= TYPES ================= */
 
 interface OrderGroup {
   id: string;
-  orders: Order[];
-  sender: Sender;
-  createdAt: any;
+  orders: any[];
+  sender: any;
   paymentStatus: string;
-  midtrans: MidtransInfo;
   deliveryFee: number;
 }
 
+/* ================= PAGE ================= */
+
 const OrderHistoryPage: React.FC = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>("Order History");
-  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false); // State for mobile sidebar toggle
 
+  const [activeTab, setActiveTab] = useState<string>("Order History");
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [orders, setOrders] = useState<OrderGroup[]>([]);
 
-  // get history orders
   const { user, loading } = useAuth();
+
+  /* ================= AUTH ================= */
 
   useEffect(() => {
     if (!loading && !user) {
@@ -97,29 +47,27 @@ const OrderHistoryPage: React.FC = () => {
     }
   }, [user, loading]);
 
-  // if (!user) return null;
+  /* ================= FETCH ORDERS ================= */
 
   useEffect(() => {
     if (user?.uid) {
-      // setIsLoading(true);
-      // const fetchData = async () => {
-      const getDoc = collection(firestore, "customer", user?.uid, "orders");
-      // const documentSnapshots = await getDocs(getDoc);
+      const getDoc = collection(firestore, "customer", user.uid, "orders");
+
       const unsubscribe = onSnapshot(getDoc, (snapshot) => {
         const updatedData = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
           deliveryFee: doc.data()?.deliveryFee ?? 0,
         }));
-        console.log(updatedData);
+
         setOrders(updatedData as OrderGroup[]);
       });
-      // setIsLoading(false);
+
       return () => unsubscribe();
-      // };
-      // fetchData();
     }
   }, [user?.uid]);
+
+  /* ================= TABS ================= */
 
   const tabs = [
     { name: "Order History", icon: ClipboardDocumentListIcon },
@@ -128,64 +76,33 @@ const OrderHistoryPage: React.FC = () => {
     { name: "Logout", icon: ArrowLeftOnRectangleIcon },
   ];
 
-  // payment
-  const handlePayment = async (token: string) => {
-    if (!token) {
-      alert("Token not found");
-      return;
-    }
+  /* ================= PAYMENT ================= */
 
+  const handlePayment = async (ord: any) => {
     try {
-      window.snap.pay(token, {
-        async onSuccess(result: any) {
-          console.log("Payment success:", result);
-          const orderId = result?.order_id?.split("_")?.[3];
-          // Update payment status in Firestore
-          const orderRef = doc(
-            firestore,
-            `customer/${user?.uid}/orders/${orderId}`,
-          );
-
-          await updateDoc(orderRef, {
-            paymentStatus: result?.transaction_status,
-            // updatedAt: new Date(), // Optional: add update timestamp
-            midtransRes: result, // Optional: store payment details
-          });
-
-          alert("Payment successful!");
-          // handleDeleteOrders(); // Uncomment if needed
-          // setOrders([]); // Uncomment if needed
-        },
-        onError(error: any) {
-          console.error("Payment failed:", error);
-          alert("Payment failed. Please try again.");
-        },
-        onClose() {
-          console.log("Popup closed");
-        },
-      });
+      const draftId = `${ord?.id}-${ord?.sender?.phone}`;
+      router.push(`/payment-method?draft=${draftId}`);
     } catch (error) {
-      console.error("Payment processing error:", error);
-      alert("An error occurred during payment.");
+      console.error(error);
     }
   };
 
-  //   logout
+  /* ================= LOGOUT ================= */
+
   const handleLogout = async () => {
     try {
-      // 1. Logout dari Firebase
       await signOut(auth);
 
-      // 2. Hapus cookie auth (UNTUK MIDDLEWARE)
       document.cookie =
         "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.carramica.org";
 
-      // 3. Redirect ke login
       router.replace("/login");
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error(error);
     }
   };
+
+  /* ================= LOADING ================= */
 
   if (loading) {
     return (
@@ -195,226 +112,246 @@ const OrderHistoryPage: React.FC = () => {
     );
   }
 
+  if (!user) return null;
+
+  /* ================= UI ================= */
+
   return (
-    <>
-      {/* <Header /> */}
-      {user && (
-        <div className="container mx-auto px-2 ">
-          <div className="flex min-h-screen bg-gray-100">
-            {/* Mobile Hamburger Button */}
-            <button
-              className={`fixed left-8 top-1/2 z-50 -translate-y-1/2 rounded-r-lg bg-green-800 p-2 text-white transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? "translate-x-56" : "-translate-x-full"} z-40 md:relative md:flex-none md:translate-x-0`}
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <ChevronRightIcon className="size-10 text-white dark:text-white" />
-            </button>
+    <div className="mx-auto max-w-7xl px-3 py-4">
+      <div className="flex min-h-screen gap-4 bg-gray-100">
+        {/* MOBILE BUTTON */}
+        <button
+          className={`fixed left-8 top-1/2 z-50 -translate-y-1/2 rounded-r-lg bg-green-800 p-2 text-white transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? "translate-x-56" : "-translate-x-full"} z-40 md:relative md:flex-none md:translate-x-0`}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          <ChevronRightIcon className="size-10 text-white dark:text-white" />
+        </button>
 
-            {/* Sidebar */}
-            <div
-              className={`fixed inset-y-0 left-0  w-64 bg-white shadow-lg transition-transform duration-300 ease-in-out${isSidebarOpen ? "top-24 translate-x-0" : "-translate-x-full"} z-5  md:relative md:flex-none md:translate-x-0`}
-            >
-              <div className="p-6">
-                <h1 className="text-xl font-bold">User Info</h1>
-              </div>
-              <nav>
-                <ul>
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon; // Dynamically assign the icon component
-                    return (
-                      <li key={tab.name}>
-                        <button
-                          className={`flex w-full items-center space-x-3 px-6 py-3 text-left hover:bg-gray-200 ${
-                            activeTab === tab.name
+        {/* OVERLAY */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* SIDEBAR */}
+        <div
+          className={`
+            fixed left-0 top-0 z-50  w-64 transform bg-white
+            shadow-xl transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? "h-full translate-x-0" : "-translate-x-full"}
+            md:relative md:z-auto md:translate-x-0 md:rounded-2xl
+          `}
+        >
+          <div className="border-b p-6">
+            <h1 className="text-xl font-bold">User Dashboard</h1>
+            <p className="text-sm text-gray-500">Manage your account</p>
+          </div>
+
+          <nav className="p-3">
+            <ul className="space-y-1">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+
+                return (
+                  <li key={tab.name}>
+                    <button
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+                        activeTab === tab.name
+                          ? "bg-green-100 text-green-600"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                      onClick={() => {
+                        if (tab.name === "Logout") {
+                          setActiveTab("Logout");
+                        } else {
+                          setActiveTab(tab.name);
+                        }
+                        setIsSidebarOpen(false);
+                      }}
+                    >
+                      <Icon className="size-5" />
+                      <span className="font-medium">{tab.name}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
+
+        {/* MAIN CONTENT */}
+        <div className="flex-1 space-y-6 rounded-2xl bg-white p-5 shadow-sm md:p-8">
+          {/* TITLE */}
+          <div className="border-b pb-4">
+            <h2 className="text-2xl font-bold">{activeTab}</h2>
+            <p className="text-sm text-gray-500">
+              Manage your {activeTab.toLowerCase()}
+            </p>
+          </div>
+
+          {/* ================= ORDER HISTORY ================= */}
+
+          {activeTab === "Order History" && (
+            <div className="space-y-6">
+              {orders.length > 0 ? (
+                orders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow-md"
+                  >
+                    {/* HEADER */}
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-500">Order ID</p>
+                        <p className="font-semibold">{order.id}</p>
+
+                        <p className="mt-2 text-sm text-gray-500">Sender</p>
+                        <p className="text-gray-700">
+                          {order.sender?.name} | {order.sender?.phone}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          Payment Status:
+                        </span>
+
+                        <span
+                          className={`rounded-lg px-3 py-1 text-sm font-semibold ${
+                            order?.paymentStatus === "settlement"
                               ? "bg-green-100 text-primary"
-                              : "text-gray-700"
+                              : "bg-red-100 text-red-800"
                           }`}
-                          onClick={() => {
-                            setActiveTab(tab.name);
-                            setIsSidebarOpen(false); // Close sidebar on mobile after clicking a tab
-                          }}
                         >
-                          <Icon className="size-6" /> {/* Render the icon */}
-                          <span>{tab.name}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-            </div>
+                          {order?.paymentStatus}
+                        </span>
+                      </div>
+                    </div>
 
-            {/* Overlay for Mobile Sidebar */}
-            {isSidebarOpen && (
-              <div
-                className="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden"
-                onClick={() => setIsSidebarOpen(false)}
-              ></div>
-            )}
+                    {/* SHIPMENTS */}
+                    <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                      {order?.orders?.map((ord: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`rounded-xl border p-4 ${
+                            order?.paymentStatus === "settlement"
+                              ? "bg-green-100"
+                              : "bg-red-100"
+                          }`}
+                        >
+                          <p className="mb-2 font-semibold">
+                            Shipment {idx + 1}
+                          </p>
 
-            {/* Main Content */}
-            <div className="flex-1 p-8">
-              <h2 className="mb-6 text-2xl font-bold">{activeTab}</h2>
-
-              {activeTab === "Order History" && (
-                <div className="space-y-6">
-                  {orders.length > 0 ? (
-                    orders.map((order) => (
-                      <div
-                        key={order.id}
-                        className="rounded-lg bg-white p-6 shadow-md"
-                      >
-                        <div className="">
-                          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div className="space-y-2 text-sm">
                             <div>
-                              <p className="text-lg font-semibold">
-                                Order ID: {order.id}
-                              </p>
-                              <p>Data Pengirim</p>
-                              <p className="text-gray-600">
-                                {order.sender?.name} | {order.sender?.phone}
+                              <p className="text-gray-600">Delivery Address:</p>
+                              <p className="text-gray-800">
+                                {ord.recipient?.address}
                               </p>
                             </div>
-                            <div className=" flex items-center">
-                              <p>Status Pembayaran:</p>
-                              <p
-                                className={`${order?.paymentStatus === "settlement" ? " rounded-lg bg-green-100 p-2 text-lg font-semibold text-primary" : "rounded-lg bg-red-100 p-2 text-lg font-semibold text-red-800"}`}
-                              >
-                                {order?.paymentStatus}
-                              </p>
+
+                            <p className="text-gray-600">
+                              Courier: {ord?.courier}
+                            </p>
+
+                            <div>
+                              <p className="text-gray-600">Items:</p>
+                              <ul className="list-disc pl-5 text-gray-800">
+                                {ord.products?.map(
+                                  (item: any, index: number) => (
+                                    <li key={index}>
+                                      {item?.name} x {item?.quantity}
+                                    </li>
+                                  ),
+                                )}
+                              </ul>
                             </div>
-                          </div>
-                          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            {order?.orders?.map((ord, idx) => {
-                              return (
-                                <div
-                                  key={idx}
-                                  className={`${order?.paymentStatus === "settlement" ? "rounded-lg bg-green-100 p-6 shadow-md" : "rounded-lg bg-red-100 p-6 shadow-md"}`}
-                                  // className="rounded-lg bg-green-100 p-6 shadow-md"
-                                >
-                                  <p>Orderan {idx + 1}</p>
-                                  <div>
-                                    <p className="text-gray-600">
-                                      Delivery Address:
-                                    </p>
-                                    <p className="text-gray-800">
-                                      {ord.recipient?.address}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-600">
-                                      Courier: {ord?.courier}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <p className="text-gray-600">Items:</p>
-                                    <ul className="list-inside list-disc text-gray-800">
-                                      {ord.products.map((item, index) => (
-                                        <li key={index}>
-                                          {item?.name} x {item?.quantity}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="flex justify-between">
-                            <button className="mr-1 mt-4 rounded-lg bg-primary px-4 py-2 text-white hover:bg-green-600">
-                              Download Invoice
-                            </button>
-                            {order?.paymentStatus === "pending" &&
-                              order?.midtrans?.token && (
-                                <button
-                                  onClick={() =>
-                                    handlePayment(order?.midtrans?.token)
-                                  }
-                                  className="ml-1 mt-4 rounded-lg bg-primary px-4 py-2 text-white hover:bg-green-600"
-                                >
-                                  Bayar sekarang
-                                </button>
-                              )}
                           </div>
                         </div>
-                        {/* <div className="mt-4">
-                      <p className="text-gray-600">Items:</p>
-                      <ul className="list-inside list-disc text-gray-800">
-                        {order.items.map((item, index) => (
-                          <li key={index}>{item}</li>
-                        ))}
-                      </ul>
+                      ))}
                     </div>
-                    <div className="mt-4">
-                      <button className="mt-4 rounded-lg bg-green-800 px-4 py-2 text-white hover:bg-green-600">
+
+                    {/* ACTIONS */}
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-between">
+                      <button className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-green-600">
                         Download Invoice
                       </button>
-                    </div> */}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex  flex-col items-center justify-center bg-gray-50">
-                      {/* Icon */}
-                      <svg
-                        className="mb-4 size-16 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        ></path>
-                      </svg>
 
-                      {/* Message */}
-                      <h2 className="mb-2 text-xl font-semibold text-gray-800">
-                        No data available
-                      </h2>
-                      <p className="mb-6 text-gray-500">
-                        There is no data to display at the moment.
-                      </p>
-
-                      {/* Call-to-action Button */}
+                      {order?.paymentStatus === "pending" && (
+                        <button
+                          onClick={() => handlePayment(order)}
+                          className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-green-600"
+                        >
+                          Bayar sekarang
+                        </button>
+                      )}
                     </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "Account Info" && (
-                <div className="rounded-lg bg-white p-6 shadow-md">
-                  <UserInfoPage />
-                </div>
-              )}
-
-              {activeTab === "Address Data" && (
-                <div className="rounded-lg bg-white p-6 shadow-md">
-                  <AddressDataPage />
-                </div>
-              )}
-
-              {activeTab === "Logout" && (
-                <div className="rounded-lg bg-white p-6 shadow-md">
-                  <p>Are you sure you want to log out?</p>
-                  <button
-                    onClick={handleLogout}
-                    className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center rounded-xl bg-gray-50 py-12">
+                  <svg
+                    className="mb-4 size-16 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    Logout
-                  </button>
-                  {/* <button
-                  onClick={() => handleTabClick(tab.name)}
-                  className={`flex w-full items-center space-x-3 px-6 py-3`}
-                ></button> */}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+
+                  <h2 className="mb-2 text-xl font-semibold text-gray-800">
+                    No data available
+                  </h2>
+
+                  <p className="text-gray-500">
+                    There is no data to display at the moment.
+                  </p>
                 </div>
               )}
             </div>
-          </div>
+          )}
+
+          {/* ================= ACCOUNT INFO ================= */}
+
+          {activeTab === "Account Info" && (
+            <div className="rounded-xl border bg-white p-6 shadow-sm">
+              <UserInfoPage />
+            </div>
+          )}
+
+          {/* ================= ADDRESS ================= */}
+
+          {activeTab === "Address Data" && (
+            <div className="rounded-xl border bg-white p-6 shadow-sm">
+              <AddressDataPage />
+            </div>
+          )}
+
+          {/* ================= LOGOUT ================= */}
+
+          {activeTab === "Logout" && (
+            <div className="rounded-xl border bg-white p-6 shadow-sm">
+              <p>Are you sure you want to log out?</p>
+
+              <button
+                onClick={handleLogout}
+                className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 
