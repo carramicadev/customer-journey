@@ -77,7 +77,7 @@ export default function Header({
   }, [user?.uid]);
 
   return (
-    <header className="fixed relative inset-x-0 top-0 z-50 bg-white shadow">
+    <header className="fixed inset-x-0 top-0 z-50 bg-white shadow">
       <div className="mx-auto flex h-16 max-w-7xl items-center px-3 md:h-20 md:px-4">
         <button
           className="mr-auto text-primary md:hidden"
