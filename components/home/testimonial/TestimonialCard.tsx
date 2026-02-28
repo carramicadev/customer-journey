@@ -71,7 +71,7 @@ export default function TestimonialCard({ item, active }: Props) {
           <div className="mb-2 text-sm tracking-widest">⭐⭐⭐⭐⭐</div>
 
           <p className="font-subheading text-lg leading-relaxed">
-            "{item.text}"
+            {`"{item.text}"`}
           </p>
 
           <p className="font-body mt-3 border-t pt-3 text-sm opacity-90">
