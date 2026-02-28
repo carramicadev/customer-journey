@@ -1,15 +1,37 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import {
+  Inter,
+  Playfair_Display,
+  Abhaya_Libre,
+  Poppins,
+} from "next/font/google";
 
 import "./globals.css";
 import { CategoriesProvider } from "@/context/CategoriesContext";
 import { Suspense } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import Header from "@/components/header/Header";
-import Footer from "@/components/footer";
+import Footer from "@/components/footer/Footer";
 import HeaderVisibility from "@/components/header/HeaderVisibility";
 
 const inter = Inter({ subsets: ["latin"] });
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
+});
+
+const abhaya = Abhaya_Libre({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-abhaya",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  variable: "--font-poppins",
+});
 
 export const metadata: Metadata = {
   title: "Create Flowbite React",
@@ -31,7 +53,9 @@ export default function RootLayout({
         />
       </head>
 
-      <body className={inter.className}>
+      <body
+        className={`${inter.className} ${playfair.variable} ${abhaya.variable} ${poppins.variable}`}
+      >
         <AuthProvider>
           <CategoriesProvider>
             {/* ✅ HEADER GLOBAL */}
@@ -39,7 +63,7 @@ export default function RootLayout({
 
             {/* ✅ KONTEN HALAMAN */}
             <Suspense>
-              <main className="pt-20">{children}</main>
+              <main>{children}</main>
             </Suspense>
 
             {/* FOOTER GLOBAL */}

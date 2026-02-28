@@ -5,7 +5,7 @@ import { useCategories } from "@/context/CategoriesContext";
 import { currency } from "@/utils/formatter";
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { Product } from "./all-product/page";
+import { Product } from "../all-product/page";
 
 export default function Example() {
   //   const [categories, setCategories] = useState<Category[]>([]);

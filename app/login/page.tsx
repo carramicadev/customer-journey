@@ -97,10 +97,6 @@ const PhoneAuth: React.FC = () => {
   const handleVerifyOtp = async () => {
     setLoading(true);
     try {
-      // await confirmationResult.confirm(otp.join(""));
-      // const user = await confirmationResult.confirm(otp.join(""));
-
-      // document.cookie = `auth-token=${user.user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
       await confirmationResult.confirm(otp.join(""));
       alert("Phone number verified!");
       const redirect =

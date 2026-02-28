@@ -1,5 +1,6 @@
 "use client";
 // src/context/AuthContext.tsx
+import { getCookieDomain } from "@/lib/cookie";
 import { auth } from "@/components/FirebaseProvider";
 import { User } from "firebase/auth";
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -26,17 +27,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
+  const domain = getCookieDomain();
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setUser(user);
       setLoading(false);
 
       if (user) {
-        document.cookie = `auth-token=${user.uid}; path=/; max-age=2592000; SameSite=Lax; domain=.carramica.org`;
+        document.cookie = `auth-token=${user.uid}; path=/; max-age=2592000; SameSite=Lax${domain}`;
       } else {
-        document.cookie =
-          "auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.carramica.org";
+        document.cookie = `auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;${domain}`;
       }
     });
 
