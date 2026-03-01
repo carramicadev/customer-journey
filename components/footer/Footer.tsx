@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -113,11 +114,44 @@ export default function Footer() {
             <h3 className="font-heading mb-5 text-xl">Navigation</h3>
 
             <ul className="font-subheading space-y-3 text-lg text-white/90">
-              <li className="transition hover:translate-x-1">Home</li>
-              <li className="transition hover:translate-x-1">New Arrival</li>
-              <li className="transition hover:translate-x-1">All Product</li>
-              <li className="transition hover:translate-x-1">About Us</li>
-              <li className="transition hover:translate-x-1">
+              <li>
+                <Link
+                  href="/"
+                  className="block transition hover:translate-x-1 hover:text-white"
+                >
+                  Home
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/new-arrival"
+                  className="block transition hover:translate-x-1 hover:text-white"
+                >
+                  New Arrival
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/all-product"
+                  className="block transition hover:translate-x-1 hover:text-white"
+                >
+                  All Product
+                </Link>
+              </li>
+
+              <li>
+                <Link
+                  href="/about-us"
+                  className="block transition hover:translate-x-1 hover:text-white"
+                >
+                  About Us
+                </Link>
+              </li>
+
+              {/* Coming Soon */}
+              <li className="cursor-not-allowed opacity-60">
                 Blog (Coming Soon)
               </li>
             </ul>
@@ -125,7 +159,7 @@ export default function Footer() {
 
           {/* PRODUCT */}
           <div ref={(el) => el && (colsRef.current[2] = el)}>
-            <h3 className="font-heading mb-5 text-xl">Our Product</h3>
+            <h3 className="font-heading mb-5 text-xl">Signature Offering</h3>
 
             <ul className="font-subheading space-y-3 text-lg text-white/90">
               <li>Corporate Hampers</li>
@@ -192,13 +226,27 @@ export default function Footer() {
             Made with love © Copyright 2026 Carramica. All Right Reserved
           </p>
 
-          <div className="font-subheading flex gap-6 text-white/90">
-            <span className="cursor-pointer hover:underline">
+          <div className="font-subheading flex flex-wrap gap-6 text-white/90">
+            <Link
+              href="/delivery-policy"
+              className="transition hover:text-white hover:underline"
+            >
+              Delivery Policy
+            </Link>
+
+            <Link
+              href="/privacy-policy"
+              className="transition hover:text-white hover:underline"
+            >
               Privacy Policy
-            </span>
-            <span className="cursor-pointer hover:underline">
+            </Link>
+
+            <Link
+              href="/terms-conditions"
+              className="transition hover:text-white hover:underline"
+            >
               Term. & Conditions
-            </span>
+            </Link>
           </div>
         </div>
       </div>
