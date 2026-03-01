@@ -117,7 +117,7 @@ const OrderHistoryPage: React.FC = () => {
   /* ================= UI ================= */
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-4">
+    <div className="mx-auto max-w-7xl px-3 py-4 pb-12">
       <div className="flex min-h-screen gap-4 bg-gray-100">
         {/* MOBILE BUTTON */}
         <button

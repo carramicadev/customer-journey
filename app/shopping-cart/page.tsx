@@ -158,8 +158,8 @@ const ShoppingCartPage = () => {
     <>
       {/* <Header /> */}
 
-      <div className="container mx-auto px-2 pt-12">
-        <h1 className="my-6 text-center text-2xl font-bold md:text-left">
+      <div className="container mx-auto px-2 pb-12 pt-2 lg:pt-4">
+        <h1 className="my-6 text-center text-xl font-bold text-gray-900 md:text-left lg:text-2xl">
           Form Order Hampers
         </h1>
 

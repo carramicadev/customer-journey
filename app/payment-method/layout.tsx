@@ -11,7 +11,7 @@ export default function PaymentLayout({
       {/* image ada di tengah */}
       <div className="flex w-full items-center justify-center bg-primary py-6">
         <Image
-          src="/logoCarramica.svg"
+          src="/logoCarramicaWhite.svg"
           alt="Carramica"
           width={140}
           height={70}

@@ -57,7 +57,10 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer ref={sectionRef} className="bg-primary px-6 pb-10 pt-20 text-white">
+    <footer
+      ref={sectionRef}
+      className=" bg-primary px-6 pb-10 pt-20 text-white"
+    >
       <div className="mx-auto max-w-7xl">
         {/* ================= TOP GRID ================= */}
         <div className="grid gap-14 md:grid-cols-2 lg:grid-cols-4">
@@ -95,7 +98,7 @@ export default function Footer() {
               </a>
 
               <a
-                href="https://www.facebook.com/CarramicaID/"
+                href="https://www.facebook.com/carramica.tableware"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="opacity-80 transition hover:scale-110 hover:opacity-100"
@@ -114,7 +117,9 @@ export default function Footer() {
               <li className="transition hover:translate-x-1">New Arrival</li>
               <li className="transition hover:translate-x-1">All Product</li>
               <li className="transition hover:translate-x-1">About Us</li>
-              <li className="transition hover:translate-x-1">Blog</li>
+              <li className="transition hover:translate-x-1">
+                Blog (Coming Soon)
+              </li>
             </ul>
           </div>
 
@@ -144,7 +149,7 @@ export default function Footer() {
 
               <div className="flex items-center gap-3">
                 <Phone size={20} />
-                +62 8123 456 789
+                +62 812 9136 6950
               </div>
             </div>
 
