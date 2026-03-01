@@ -80,6 +80,10 @@ img {
   transform: translateZ(0);
 }
 
+.translate-z-0 {
+  transform: translateZ(0);
+}
+
 .next-image-wrapper {
   position: relative;
   overflow: hidden;

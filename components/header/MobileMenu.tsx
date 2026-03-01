@@ -20,7 +20,19 @@ export default function MobileMenu({
   };
 
   return (
-    <div className="absolute left-0 top-full z-40 w-full border-t bg-white shadow-lg md:hidden">
+    <div
+      className="
+    fixed
+    inset-x-0
+    top-16 z-40
+    w-full
+    border-t
+    bg-white
+    shadow-lg
+    md:top-20
+    md:hidden
+  "
+    >
       <div className="flex flex-col gap-1 p-4">
         <Button
           variant="ghost"
