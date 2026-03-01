@@ -63,16 +63,16 @@ export default function Example() {
           <div key={categ.id}>
             <div>
               <img
-                className="w-full rounded-lg"
+                className="w-full rounded-3xl"
                 src={categ?.thumbnail}
                 alt=""
                 // width={1310}
                 // height={873}
               />
             </div>
-            <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
+            <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8 lg:max-w-7xl lg:px-8">
               <div className="md:flex md:items-center md:justify-between">
-                <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+                <h2 className="font-heading text-xl font-bold text-primary lg:text-2xl ">
                   {categ.nama}
                 </h2>
                 <a
@@ -87,7 +87,7 @@ export default function Example() {
               <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-4 md:gap-y-0 lg:gap-x-8">
                 {productsByCategory[categ.id]?.map((product) => (
                   <div key={product.id} className="group relative">
-                    <div className="h-56 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:h-72 xl:h-80">
+                    <div className="h-56 w-full overflow-hidden rounded-xl bg-gray-200 group-hover:opacity-75 lg:h-72 xl:h-80">
                       <img
                         src={product.thumbnail?.[0]}
                         alt={product.nama}
