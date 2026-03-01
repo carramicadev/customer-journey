@@ -72,14 +72,14 @@ export default function Example() {
             </div>
             <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8 lg:max-w-7xl lg:px-8">
               <div className="md:flex md:items-center md:justify-between">
-                <h2 className="font-heading text-xl font-bold text-primary lg:text-2xl ">
+                <h2 className="font-heading text-xl font-semibold text-primary lg:text-2xl ">
                   {categ.nama}
                 </h2>
                 <a
                   href={`/all-product?category=${categ.id}`}
-                  className="hidden text-sm font-medium text-indigo-600 hover:text-indigo-500 md:block"
+                  className="hidden text-sm font-medium text-primary hover:text-green-700 md:block"
                 >
-                  See Moore
+                  See More
                   <span aria-hidden="true"> &rarr;</span>
                 </a>
               </div>
@@ -113,9 +113,9 @@ export default function Example() {
               <div className="mt-8 text-sm md:hidden">
                 <a
                   href="#"
-                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                  className="font-medium text-primary hover:text-green-700"
                 >
-                  See moore
+                  See more
                   <span aria-hidden="true"> &rarr;</span>
                 </a>
               </div>

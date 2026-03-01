@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 import { auth, RecaptchaVerifier } from "@/components/FirebaseProvider";
 import { signInWithPhoneNumber } from "firebase/auth";
+import Image from "next/image";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -119,12 +120,19 @@ const PhoneAuth: React.FC = () => {
           <div>
             {/* Welcome Message */}
             <div className="flex flex-col items-center justify-center text-center">
-              <h1 className="mb-4 font-bold text-gray-800">
+              <h1 className="mb-4 font-bold text-gray-700">
                 Selamat Datang di
               </h1>
-              <h1 className="mb-4 text-4xl font-bold text-gray-800">
-                <span className="text-primary">CARRAMICA</span>
-              </h1>
+              <div className="mb-6">
+                <Image
+                  src="/logoCarramica2.svg"
+                  alt="Carramica"
+                  width={220}
+                  height={80}
+                  priority
+                  className="mx-auto h-auto w-[180px] md:w-[220px]"
+                />
+              </div>
             </div>
 
             {/* Phone Number Input */}
