@@ -13,13 +13,11 @@ import {
  * MAP PAYMENT METHOD → MIDTRANS CONFIG
  * ============================================
  */
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 const mapPaymentToMidtrans = (
   method: PaymentMethod,
-): Pick<
-  MidtransTransactionRequest,
-  "payment_type" | "bank_transfer" | "qris" | "gopay" | "shopeepay"
-> => {
+): Partial<MidtransTransactionRequest> => {
   switch (method) {
     /* ===== BANK VA ===== */
 
@@ -64,7 +62,9 @@ const mapPaymentToMidtrans = (
     case "shopeepay":
       return {
         payment_type: "shopeepay",
-        shopeepay: {},
+        shopeepay: {
+          callback_url: `${BASE_URL}/payment-finish`,
+        },
       };
 
     /* ===== QRIS ===== */
@@ -73,6 +73,42 @@ const mapPaymentToMidtrans = (
       return {
         payment_type: "qris",
         qris: {},
+      };
+
+    case "credit_card":
+      return {
+        payment_type: "credit_card",
+        credit_card: {
+          secure: true,
+        },
+      };
+
+    case "indomaret":
+      return {
+        payment_type: "cstore",
+        cstore: {
+          store: "indomaret",
+          message: "Pembayaran Carramica",
+        },
+      };
+
+    case "alfamart":
+      return {
+        payment_type: "cstore",
+        cstore: {
+          store: "alfamart",
+          message: "Pembayaran Carramica",
+        },
+      };
+
+    case "kredivo":
+      return {
+        payment_type: "kredivo",
+      };
+
+    case "akulaku":
+      return {
+        payment_type: "akulaku",
       };
 
     default:
@@ -111,7 +147,9 @@ const parseMidtransResult = (res: any): PaymentResult => {
   /* ===== EWALLET / QRIS ===== */
 
   const redirect =
-    res.actions?.find((a: any) => a.name === "deeplink-redirect")?.url ??
+    res.actions?.find((a: any) =>
+      ["deeplink-redirect", "get-web-redirect-url"].includes(a.name),
+    )?.url ??
     res.redirect_url ??
     res.actions?.[0]?.url;
 
@@ -159,12 +197,16 @@ export const usePaymentMethod = () => {
 
       const paymentConfig = mapPaymentToMidtrans(method);
 
+      if (!paymentConfig.payment_type) {
+        throw new Error("Payment type missing");
+      }
+
       /* ===== BUILD FINAL BODY ===== */
 
       const body: MidtransTransactionRequest = {
         ...baseRequest,
         ...paymentConfig,
-      };
+      } as MidtransTransactionRequest;
 
       /**
        * ====================================

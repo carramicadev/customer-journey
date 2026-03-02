@@ -14,7 +14,12 @@ export type PaymentMethod =
   | "permata_va"
   | "gopay"
   | "shopeepay"
-  | "qris";
+  | "qris"
+  | "credit_card"
+  | "indomaret"
+  | "alfamart"
+  | "akulaku"
+  | "kredivo";
 
 /* =========================================================
    PAYMENT UI ITEM
@@ -58,9 +63,23 @@ export interface MidtransTransactionRequest {
 
   qris?: Record<string, never>;
 
-  gopay?: Record<string, never>;
+  gopay?: {
+    enable_callback?: boolean;
+    callback_url?: string;
+  };
 
-  shopeepay?: Record<string, never>;
+  shopeepay?: {
+    callback_url?: string;
+  };
+
+  credit_card?: {
+    secure: boolean;
+  };
+
+  cstore?: {
+    store: "indomaret" | "alfamart";
+    message?: string;
+  };
 }
 
 /* =========================================================
