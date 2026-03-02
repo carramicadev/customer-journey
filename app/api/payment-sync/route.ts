@@ -25,7 +25,9 @@ export async function POST(req: Request) {
     .collection("orders")
     .doc(orderId)
     .update({
-      paymentStatus: data.paymentStatus ?? "pending",
+      paymentStatus:
+        data.paymentStatus ?? data.midtransRes?.transaction_status ?? "pending",
+
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
