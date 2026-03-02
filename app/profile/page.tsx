@@ -18,7 +18,7 @@ import AddressDataPage from "./address";
 import { signOut } from "firebase/auth";
 import { auth, firestore } from "@/components/FirebaseProvider";
 import { useRouter } from "next/navigation";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, onSnapshot } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 
 /* ================= TYPES ================= */
@@ -79,6 +79,27 @@ const OrderHistoryPage: React.FC = () => {
 
   useEffect(() => {
     if (user?.uid) {
+      const syncOrders = async () => {
+        const snap = await getDocs(
+          collection(firestore, "customer", user.uid, "orders"),
+        );
+
+        await Promise.all(
+          snap.docs.map((doc) =>
+            fetch("/api/midtrans/sync", {
+              method: "POST",
+              body: JSON.stringify({
+                orderId: doc.id,
+                uid: user.uid,
+              }),
+            }),
+          ),
+        );
+      };
+
+      // ✅ sync dulu
+      syncOrders();
+
       const getDoc = collection(firestore, "customer", user.uid, "orders");
 
       const unsubscribe = onSnapshot(getDoc, (snapshot) => {
