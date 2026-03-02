@@ -63,11 +63,7 @@ const mapPaymentToMidtrans = (
       return {
         payment_type: "shopeepay",
         shopeepay: {
-<<<<<<< HEAD
-          callback_url: "https://customerdev.carramica.org/",
-=======
           callback_url: `${BASE_URL}/payment-finish`,
->>>>>>> 16a3e6bf3c7400be673f2b3c19e65c2173c33822
         },
       };
 
@@ -210,13 +206,8 @@ export const usePaymentMethod = () => {
       const body: MidtransTransactionRequest = {
         ...baseRequest,
         ...paymentConfig,
-<<<<<<< HEAD
-      };
-      console.log(body);
-=======
       } as MidtransTransactionRequest;
 
->>>>>>> 16a3e6bf3c7400be673f2b3c19e65c2173c33822
       /**
        * ====================================
        * CALL BACKEND (WAJIB SERVER SIDE)

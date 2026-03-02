@@ -24,10 +24,32 @@ const BANKS: { id: PaymentMethod; logo: string; label: string }[] = [
 interface Props {
   selected: PaymentMethod | null;
   onSelect: (m: PaymentMethod) => void;
+
   status: string;
+
+  card: {
+    number: string;
+    expMonth: string;
+    expYear: string;
+    cvv: string;
+  };
+
+  setCard: React.Dispatch<
+    React.SetStateAction<{
+      number: string;
+      expMonth: string;
+      expYear: string;
+      cvv: string;
+    }>
+  >;
 }
 
-export default function PaymentAccordionSection({ selected, onSelect }: Props) {
+export default function PaymentAccordionSection({
+  selected,
+  onSelect,
+  card,
+  setCard,
+}: Props) {
   const [openVA, setOpenVA] = useState(true);
 
   return (
@@ -168,6 +190,41 @@ export default function PaymentAccordionSection({ selected, onSelect }: Props) {
           </div>
           ›
         </button>
+
+        {/* ================= CREDIT CARD FORM ================= */}
+        {selected === "credit_card" && (
+          <Card className="mt-6 space-y-4 p-6">
+            <input
+              placeholder="1234 1234 1234 1234"
+              className="w-full rounded border p-3"
+              value={card.number}
+              onChange={(e) => setCard({ ...card, number: e.target.value })}
+            />
+
+            <div className="flex gap-3">
+              <input
+                placeholder="MM"
+                className="w-1/3 rounded border p-3"
+                value={card.expMonth}
+                onChange={(e) => setCard({ ...card, expMonth: e.target.value })}
+              />
+
+              <input
+                placeholder="YYYY"
+                className="w-1/3 rounded border p-3"
+                value={card.expYear}
+                onChange={(e) => setCard({ ...card, expYear: e.target.value })}
+              />
+
+              <input
+                placeholder="CVV"
+                className="w-1/3 rounded border p-3"
+                value={card.cvv}
+                onChange={(e) => setCard({ ...card, cvv: e.target.value })}
+              />
+            </div>
+          </Card>
+        )}
 
         <p className="mt-6 text-sm text-gray-400">Convenience Store</p>
         <button

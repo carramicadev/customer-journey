@@ -71,8 +71,6 @@ export interface MidtransTransactionRequest {
   shopeepay?: {
     callback_url?: string;
   };
-<<<<<<< HEAD
-=======
 
   credit_card?: {
     secure: boolean;
@@ -82,7 +80,6 @@ export interface MidtransTransactionRequest {
     store: "indomaret" | "alfamart";
     message?: string;
   };
->>>>>>> 16a3e6bf3c7400be673f2b3c19e65c2173c33822
 }
 
 /* =========================================================

@@ -55,6 +55,14 @@ export default function PaymentMethodPage() {
   const [selected, setSelected] = useState<PaymentMethod | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
 
+  /* ================= CREDIT CARD STATE ================= */
+  const [card, setCard] = useState({
+    number: "",
+    expMonth: "",
+    expYear: "",
+    cvv: "",
+  });
+
   const [sender, setSender] = useState<ContactInfo | null>(null);
   const [savedResult, setSavedResult] = useState<PaymentResult | null>(null);
 
@@ -111,9 +119,126 @@ export default function PaymentMethodPage() {
     load();
   }, [user?.uid, invoiceId]);
 
+  /* ================= GET CARD TOKEN ================= */
+
+  const getCardToken = async () => {
+    if (!isValidCardNumber(card.number)) {
+      alert("Nomor kartu tidak valid");
+      return;
+    }
+
+    const cardData = {
+      card_number: card.number.replace(/\s/g, ""),
+      card_exp_month: card.expMonth,
+      card_exp_year: card.expYear,
+      card_cvv: card.cvv,
+    };
+
+    // @ts-ignore
+    window.MidtransNew3ds.getCardToken(cardData, {
+      onSuccess: async (res: any) => {
+        await handleCreditCardCharge(res.token_id);
+      },
+
+      onFailure: (err: any) => {
+        console.error(err);
+        alert("Card validation failed");
+      },
+    });
+  };
+
+  /* ================= CREDIT CARD CHARGE ================= */
+
+  const handleCreditCardCharge = async (token: string) => {
+    if (!sender || !invoiceId) return;
+
+    const baseRequest = prepareTransactionData(orders, invoiceId, sender);
+
+    const body = {
+      ...baseRequest,
+      payment_type: "credit_card",
+      credit_card: {
+        token_id: token,
+        authentication: true,
+      },
+    };
+
+    const res = await fetch("/api/midtrans/create", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const json = await res.json();
+
+    open3DS(json.data.redirect_url);
+  };
+
+  /* ================= OPEN 3DS ================= */
+
+  const open3DS = (redirectUrl: string) => {
+    // @ts-ignore
+    window.MidtransNew3ds.authenticate(redirectUrl, {
+      performAuthentication(url: string) {
+        window.open(url, "_blank");
+      },
+
+      onSuccess(response: any) {
+        console.log("3DS SUCCESS", response);
+      },
+
+      onPending(response: any) {
+        console.log("3DS PENDING", response);
+      },
+
+      onFailure(response: any) {
+        console.log("3DS FAILED", response);
+      },
+    });
+  };
+
+  /* ================= CARD VALIDATION ================= */
+
+  const isValidCardNumber = (num: string) => {
+    const arr = num.replace(/\s/g, "").split("").reverse();
+
+    let sum = 0;
+
+    arr.forEach((n, i) => {
+      let digit = parseInt(n);
+
+      if (i % 2 !== 0) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+
+      sum += digit;
+    });
+
+    return sum % 10 === 0;
+  };
+
+  const detectCardType = (number: string) => {
+    const n = number.replace(/\s/g, "");
+
+    if (/^4/.test(n)) return "VISA";
+    if (/^5[1-5]/.test(n)) return "MASTERCARD";
+    if (/^3[47]/.test(n)) return "AMEX";
+    if (/^35/.test(n)) return "JCB";
+
+    return "UNKNOWN";
+  };
+
   /* ================= PAY ================= */
 
   const handlePay = async () => {
+    if (selected === "credit_card") {
+      await getCardToken();
+      return;
+    }
+
     const draftId = invoiceId;
 
     if (!draftId) {
@@ -166,6 +291,11 @@ export default function PaymentMethodPage() {
 
     /* ================= CALL MIDTRANS ================= */
 
+    // if (selected === "credit_card") {
+    //   getCardToken();
+    //   return;
+    // }
+
     const res = await createTransaction(baseRequest, selected);
 
     /* ================= SAVE MIDTRANS ================= */
@@ -197,6 +327,7 @@ export default function PaymentMethodPage() {
 
     // await Promise.all(cartSnap.docs.map((d) => deleteDoc(d.ref)));
   };
+
   useEffect(() => {
     const handler = async () => {
       const r = result || savedResult;
@@ -239,6 +370,34 @@ export default function PaymentMethodPage() {
   }, [result, savedResult]);
 
   const [timeLeft, setTimeLeft] = useState("");
+
+  // =========== LOAD MIDTRANS 3DS SCRIPT ======
+  useEffect(() => {
+    const script = document.createElement("script");
+
+    script.src =
+      "https://api.midtrans.com/v2/assets/js/midtrans-new-3ds.min.js";
+
+    script.setAttribute(
+      "data-environment",
+      process.env.NEXT_PUBLIC_ENVIRONMENT === "production"
+        ? "production"
+        : "sandbox",
+    );
+
+    script.setAttribute(
+      "data-client-key",
+      process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY!,
+    );
+
+    script.id = "midtrans-script";
+
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    console.log("CARD TYPE:", detectCardType(card.number));
+  }, [card.number]);
 
   useEffect(() => {
     if (!expireTime) return;
@@ -307,6 +466,8 @@ export default function PaymentMethodPage() {
                 setSelected(method);
               }}
               status={timeLeft}
+              card={card}
+              setCard={setCard}
             />
           )}
 
