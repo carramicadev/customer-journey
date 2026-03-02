@@ -112,7 +112,7 @@ export const useCheckout = (
 
       await setDoc(
         doc(firestore, "customer", userId, "orders", orderDoc.id),
-        { midtrans: (result as any)?.data?.items },
+        { midtrans: (result as any)?.data?.items, order_id: orderDoc.id },
         { merge: true },
       );
 

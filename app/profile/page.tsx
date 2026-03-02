@@ -16,10 +16,18 @@ import UserInfoPage from "./user-info";
 import AddressDataPage from "./address";
 
 import { signOut } from "firebase/auth";
-import { auth, firestore } from "@/components/FirebaseProvider";
+import { auth, firestore, functions } from "@/components/FirebaseProvider";
 import { useRouter } from "next/navigation";
-import { collection, getDocs, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  setDoc,
+} from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { httpsCallable } from "firebase/functions";
 
 /* ================= TYPES ================= */
 
@@ -30,7 +38,9 @@ interface OrderGroup {
   paymentStatus: string;
   deliveryFee: number;
 }
-
+interface MyResponse {
+  transaction_status: string;
+}
 /* ================= PAGE ================= */
 
 const paymentStatusStyle = (status?: string) => {
@@ -64,7 +74,8 @@ const OrderHistoryPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>("Order History");
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [orders, setOrders] = useState<OrderGroup[]>([]);
-
+  const [status, setStatus] = useState<any>([]);
+  const [loadingStat, setLoadingStat] = useState<boolean>(false);
   const { user, loading } = useAuth();
 
   /* ================= AUTH ================= */
@@ -154,6 +165,40 @@ const OrderHistoryPage: React.FC = () => {
       router.replace("/login");
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  // cek status
+  const handleCheckStat = async (order: any) => {
+    console.log(order);
+    setLoadingStat(true);
+    try {
+      const cekStatus = httpsCallable<any, MyResponse>(functions, "cekStatus");
+      const res = await cekStatus({
+        order_id: order?.midtrans?.orderId,
+      });
+      console.log(res);
+      if (res?.data?.transaction_status && user?.uid) {
+        const updateDoc = doc(
+          firestore,
+          "customer",
+          user.uid,
+          "orders",
+          order?.id,
+        );
+        await setDoc(
+          updateDoc,
+          {
+            paymentStatus: res?.data?.transaction_status,
+          },
+          { merge: true },
+        );
+      }
+      setStatus([]);
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoadingStat(false);
     }
   };
 
@@ -280,6 +325,12 @@ const OrderHistoryPage: React.FC = () => {
                         >
                           {order?.paymentStatus || "draft"}
                         </span>
+                        {/* <Button
+                          disabled={loadingStat}
+                          onClick={() => handleCheckStat(order)}
+                        >
+                          {loadingStat ? "checking" : "cek status"}
+                        </Button> */}
                       </div>
                     </div>
 

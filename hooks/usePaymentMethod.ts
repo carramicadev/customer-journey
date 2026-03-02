@@ -64,7 +64,9 @@ const mapPaymentToMidtrans = (
     case "shopeepay":
       return {
         payment_type: "shopeepay",
-        shopeepay: {},
+        shopeepay: {
+          callback_url: "https://customerdev.carramica.org/",
+        },
       };
 
     /* ===== QRIS ===== */
@@ -165,7 +167,7 @@ export const usePaymentMethod = () => {
         ...baseRequest,
         ...paymentConfig,
       };
-
+      console.log(body);
       /**
        * ====================================
        * CALL BACKEND (WAJIB SERVER SIDE)

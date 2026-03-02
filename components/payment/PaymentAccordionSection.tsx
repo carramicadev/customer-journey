@@ -24,6 +24,7 @@ const BANKS: { id: PaymentMethod; logo: string; label: string }[] = [
 interface Props {
   selected: PaymentMethod | null;
   onSelect: (m: PaymentMethod) => void;
+  status: string;
 }
 
 export default function PaymentAccordionSection({ selected, onSelect }: Props) {

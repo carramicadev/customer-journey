@@ -5,6 +5,7 @@ export const prepareTransactionData = (
   orders: Order[],
   invoiceId: string,
   contactInfo?: ContactInfo,
+  userId?: string,
 ) => {
   const now = new Date();
 
@@ -13,7 +14,7 @@ export const prepareTransactionData = (
     String(now.getMinutes()).padStart(2, "0") +
     String(now.getSeconds()).padStart(2, "0");
 
-  const finalOrderId = `ORDER_${invoiceId}_${time}`;
+  const finalOrderId = `ORDER_CUST_${invoiceId}_${time}`;
 
   const products = orders.flatMap((order) =>
     order.products.map((product) => ({
@@ -50,6 +51,7 @@ export const prepareTransactionData = (
       first_name: contactInfo?.name ?? "Customer",
       phone: contactInfo?.phone ?? "",
       email: contactInfo?.email ?? "customer@email.com",
+      user_id: userId,
     },
   };
 };

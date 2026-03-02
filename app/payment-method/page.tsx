@@ -161,6 +161,7 @@ export default function PaymentMethodPage() {
       orders,
       invoiceId!,
       sender ?? undefined,
+      user?.uid,
     );
 
     /* ================= CALL MIDTRANS ================= */
@@ -185,6 +186,7 @@ export default function PaymentMethodPage() {
       },
 
       paymentStatus: "pending",
+      order_id: draftId,
     });
 
     /* ================= CLEAR CART ================= */
@@ -262,7 +264,7 @@ export default function PaymentMethodPage() {
 
     return () => clearInterval(i);
   }, [expireTime]);
-
+  // console.log(timeLeft);
   if (checkingDraft) return null;
 
   /* ================= UI ================= */
@@ -294,7 +296,7 @@ export default function PaymentMethodPage() {
             <p className="text-sm text-gray-500">Order ID : {invoiceId}</p>
 
             <div className="mt-4 rounded bg-gray-100 p-2 text-center text-sm font-semibold">
-              Pilih dalam {timeLeft}
+              {timeLeft !== "EXPIRED" ? `Pilih dalam ${timeLeft}` : timeLeft}
             </div>
           </Card>
 
@@ -304,6 +306,7 @@ export default function PaymentMethodPage() {
               onSelect={(method) => {
                 setSelected(method);
               }}
+              status={timeLeft}
             />
           )}
 
@@ -323,7 +326,10 @@ export default function PaymentMethodPage() {
 
           {(result || savedResult) && (
             <>
-              <PaymentInstruction result={result || savedResult} />
+              <PaymentInstruction
+                result={result || savedResult}
+                status={timeLeft}
+              />
 
               <div className="flex justify-center">
                 <button

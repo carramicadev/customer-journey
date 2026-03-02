@@ -60,7 +60,9 @@ export interface MidtransTransactionRequest {
 
   gopay?: Record<string, never>;
 
-  shopeepay?: Record<string, never>;
+  shopeepay?: {
+    callback_url?: string;
+  };
 }
 
 /* =========================================================

@@ -351,7 +351,7 @@ const ProductPage: React.FC = () => {
       />
 
       {orderIndex && (
-        <button className="fixed bottom-4 left-4 flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-white shadow-lg">
+        <button className="fixed bottom-4 left-4 z-10 flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-white shadow-lg">
           <InformationCircleIcon className="size-5" />
           Tambah product untuk order {orderIndex}
         </button>

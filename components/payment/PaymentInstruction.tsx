@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 
 interface Props {
   result: PaymentResult | null;
+  status: string;
 }
 
 /**
@@ -29,7 +30,7 @@ const copy = async (text?: string) => {
  * ============================================
  */
 
-export default function PaymentInstruction({ result }: Props) {
+export default function PaymentInstruction({ result, status }: Props) {
   const router = useRouter();
   const [showHow, setShowHow] = useState(false);
 
@@ -55,7 +56,9 @@ export default function PaymentInstruction({ result }: Props) {
   }
 
   return (
-    <Card className="mt-6 space-y-4 border-2 border-primary bg-green-50 p-6">
+    <Card
+      className={`mt-6 space-y-4 border-2  ${status === "EXPIRED" ? "border-red-900 bg-red-50" : "border-primary bg-green-50"}  p-6`}
+    >
       {/* HEADER */}
       <div className="flex items-center gap-2">
         <CheckCircle className="size-6 text-primary" />
