@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Truck } from "lucide-react";
+import { calculateETA } from "@/utils/calculateETA";
 
 import { useRouter } from "next/navigation";
 import {
@@ -210,6 +212,22 @@ export default function PaymentMethodPage() {
           ...prev!,
           status: data.transaction_status,
         }));
+
+        await fetch("/api/payment-sync", {
+          method: "POST",
+          body: JSON.stringify({
+            orderId: invoiceId,
+            uid: user!.uid,
+          }),
+        });
+
+        // ✅ SYNC FIRESTORE
+        await updateDoc(
+          doc(firestore, "customer", user!.uid, "orders", invoiceId!),
+          {
+            paymentStatus: data.transaction_status,
+          },
+        );
       }
     };
 
@@ -335,6 +353,21 @@ export default function PaymentMethodPage() {
           {orders.map((o, i) => (
             <div key={i} className="mb-6 border-b pb-4">
               <p className="font-semibold">Order {i + 1}</p>
+
+              {o.recipient && (
+                <div className="flex items-center gap-1 py-2">
+                  <Truck className="size-3 text-gray-500" />
+                  <p className="font-regular text-xs text-gray-500">
+                    Estimasi tiba: {calculateETA(o.dataCourier?.duration)}
+                  </p>
+                </div>
+              )}
+              {/* Tampilkan nama penerima di samping order i */}
+              {/* Tampilkan alamat penerima di bawah order i  */}
+              {/* tampilkan tanggal perkiraan barang tiba dibawah alamat*/}
+
+              {/* tanggal hari ini + durasi pengiriman tertinggi */}
+              {/* misalnya: durasi 3-5 hari, maka tanggal hari ini + 5 hari kerja. hari minggu jangan dihitung */}
 
               {o.products.map((p: any, j: number) => (
                 <div key={j} className="flex justify-between text-sm">

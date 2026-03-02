@@ -9,6 +9,9 @@ import {
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
+import { Truck } from "lucide-react";
+import { calculateETA } from "@/utils/calculateETA";
+
 import UserInfoPage from "./user-info";
 import AddressDataPage from "./address";
 
@@ -29,6 +32,31 @@ interface OrderGroup {
 }
 
 /* ================= PAGE ================= */
+
+const paymentStatusStyle = (status?: string) => {
+  switch (status) {
+    case "draft":
+      return "bg-gray-100 text-gray-700";
+
+    case "pending":
+      return "bg-yellow-100 text-yellow-700";
+
+    case "settlement":
+      return "bg-green-100 text-green-700";
+
+    case "expire":
+      return "bg-red-100 text-red-700";
+
+    case "cancel":
+      return "bg-red-200 text-red-800";
+
+    case "deny":
+      return "bg-red-200 text-red-800";
+
+    default:
+      return "bg-blue-100 text-blue-700";
+  }
+};
 
 const OrderHistoryPage: React.FC = () => {
   const router = useRouter();
@@ -54,11 +82,17 @@ const OrderHistoryPage: React.FC = () => {
       const getDoc = collection(firestore, "customer", user.uid, "orders");
 
       const unsubscribe = onSnapshot(getDoc, (snapshot) => {
-        const updatedData = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          deliveryFee: doc.data()?.deliveryFee ?? 0,
-        }));
+        const updatedData = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            paymentStatus: doc.data()?.paymentStatus ?? "draft",
+            deliveryFee: doc.data()?.deliveryFee ?? 0,
+          }))
+          .sort(
+            (a: any, b: any) =>
+              (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0),
+          );
 
         setOrders(updatedData as OrderGroup[]);
       });
@@ -219,13 +253,11 @@ const OrderHistoryPage: React.FC = () => {
                         </span>
 
                         <span
-                          className={`rounded-lg px-3 py-1 text-sm font-semibold ${
-                            order?.paymentStatus === "settlement"
-                              ? "bg-green-100 text-primary"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          className={`rounded-lg px-3 py-1 text-sm font-semibold capitalize ${paymentStatusStyle(
+                            order?.paymentStatus,
+                          )}`}
                         >
-                          {order?.paymentStatus}
+                          {order?.paymentStatus || "draft"}
                         </span>
                       </div>
                     </div>
@@ -257,6 +289,16 @@ const OrderHistoryPage: React.FC = () => {
                               Courier: {ord?.courier}
                             </p>
 
+                            {ord.recipient && (
+                              <div className="flex items-center gap-1 ">
+                                <Truck className="size-3 text-gray-500" />
+                                <p className="font-regular text-xs text-gray-500">
+                                  Estimasi tiba:{" "}
+                                  {calculateETA(ord.dataCourier?.duration)}
+                                </p>
+                              </div>
+                            )}
+
                             <div>
                               <p className="text-gray-600">Items:</p>
                               <ul className="list-disc pl-5 text-gray-800">
@@ -280,12 +322,21 @@ const OrderHistoryPage: React.FC = () => {
                         Download Invoice
                       </button>
 
+                      {order?.paymentStatus === "draft" && (
+                        <button
+                          onClick={() => handlePayment(order)}
+                          className="rounded-lg bg-tertiary px-5 py-2 text-sm font-medium text-white hover:bg-yellow-600"
+                        >
+                          Pilih Metode Pembayaran
+                        </button>
+                      )}
+
                       {order?.paymentStatus === "pending" && (
                         <button
                           onClick={() => handlePayment(order)}
-                          className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-green-600"
+                          className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-green-700"
                         >
-                          Bayar sekarang
+                          Bayar Sekarang
                         </button>
                       )}
                     </div>

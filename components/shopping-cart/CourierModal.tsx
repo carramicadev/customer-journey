@@ -34,7 +34,7 @@ export default function CourierModal({
             <p className="font-semibold">
               {s.courier_name} - {s.courier_service_name}
             </p>
-            <p className="text-sm text-gray-500">{s.duration} | COD: Tidak</p>
+            <p className="text-sm text-gray-500">{s.duration}</p>
             <p className="mt-1 font-semibold">Rp {s.price.toLocaleString()}</p>
           </div>
         ))}
