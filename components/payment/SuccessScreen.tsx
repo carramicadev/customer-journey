@@ -14,7 +14,7 @@ export default function SuccessScreen({
   useEffect(() => {
     const t = setTimeout(() => {
       router.push("/");
-    }, 1000);
+    }, 10000);
 
     return () => clearTimeout(t);
   }, []);
@@ -43,7 +43,7 @@ export default function SuccessScreen({
 
         {/* BOTTOM SECTION */}
         <div className="bg-gray-100 px-8 py-10 text-center">
-          <p className="mb-6 text-gray-600">Close in 1 second</p>
+          <p className="mb-6 text-gray-600">Close in 10 second</p>
 
           <button
             onClick={() => router.push("/")}
