@@ -20,7 +20,7 @@ export default function ExpiredScreen() {
           <div className="my-4 h-1 w-12 rounded bg-red-500" />
 
           <p className="text-gray-600">
-            We didn't receive the payment on time. Please place your order
+            We didn&apos;t receive the payment on time. Please place your order
             again.
           </p>
         </div>
@@ -31,7 +31,7 @@ export default function ExpiredScreen() {
             onClick={() => router.push("/")}
             className="w-full rounded-lg bg-gray-800 py-3 text-white"
           >
-            Return to merchant's page
+            Return to merchant&apos;s page
           </button>
         </div>
       </div>

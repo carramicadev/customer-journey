@@ -1,5 +1,5 @@
 import Image from "next/image";
-
+import Link from "next/link";
 export default function PaymentLayout({
   children,
 }: {
@@ -10,12 +10,14 @@ export default function PaymentLayout({
       {/* ===== HEADER KHUSUS PAYMENT ===== */}
       {/* image ada di tengah */}
       <div className="flex w-full items-center justify-center bg-primary py-6">
-        <Image
-          src="/logoCarramicaWhite.svg"
-          alt="Carramica"
-          width={140}
-          height={70}
-        />
+        <Link href="/">
+          <Image
+            src="/logoCarramicaWhite.svg"
+            alt="Carramica"
+            width={140}
+            height={70}
+          />
+        </Link>
       </div>
 
       {children}
