@@ -120,7 +120,10 @@ export default function PaymentMethodPage() {
       }
 
       if (data.midtrans) {
-        setSavedResult(data.midtrans);
+        setSavedResult({
+          ...data.midtrans,
+          status: data.paymentStatus ?? data.midtrans.status,
+        });
       }
 
       setCheckingDraft(false);
@@ -578,7 +581,7 @@ export default function PaymentMethodPage() {
             </Card>
           )}
 
-          {(result || savedResult) && (
+          {(result || savedResult) && finalStatus === "pending" && (
             <>
               <PaymentInstruction
                 result={result || savedResult}
