@@ -161,9 +161,9 @@ export default function PaymentInstruction({ result, status }: Props) {
 
       {/* ================= STATUS ================= */}
 
-      <div className="pt-2 text-xs text-gray-500">
+      {/* <div className="pt-2 text-xs text-gray-500">
         Status transaksi: {result.status}
-      </div>
+      </div> */}
     </Card>
   );
 }

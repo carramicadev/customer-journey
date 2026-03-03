@@ -35,6 +35,9 @@ import { firestore } from "@/components/FirebaseProvider";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ContactInfo } from "@/types/contact-info";
+import SuccessScreen from "@/components/payment/SuccessScreen";
+import ExpiredScreen from "@/components/payment/ExpiredScreen";
+import FailedScreen from "@/components/payment/FailedScreen";
 
 /* ======================================================
    BUILD REAL MIDTRANS BODY FROM SHOPPING CART
@@ -70,6 +73,7 @@ export default function PaymentMethodPage() {
   const [checkingDraft, setCheckingDraft] = useState(true);
 
   const { loading, result, error, createTransaction } = usePaymentMethod();
+  const finalStatus = savedResult?.status || result?.status || null;
 
   /* ================= LOAD CART ================= */
 
@@ -104,8 +108,14 @@ export default function PaymentMethodPage() {
 
       setOrders(data.orders || []);
       setSender(data.sender || null);
-      if (data.createdAt?.seconds) {
-        const expire = data.createdAt.seconds * 1000 + 24 * 60 * 60 * 1000;
+      if (data.paymentStartAt?.seconds) {
+        const expire =
+          data.paymentStartAt.seconds * 1000 + 7 * 24 * 60 * 60 * 1000;
+
+        setExpireTime(expire);
+      } else if (data.createdAt?.seconds) {
+        const expire = data.createdAt.seconds * 1000 + 7 * 24 * 60 * 60 * 1000;
+
         setExpireTime(expire);
       }
 
@@ -307,6 +317,8 @@ export default function PaymentMethodPage() {
 
     await updateDoc(doc(firestore, "customer", user!.uid, "orders", draftId), {
       order_Id: draftId,
+
+      paymentStartAt: serverTimestamp(),
       midtrans: {
         orderId: res.orderId ?? draftId,
         status: res.status ?? "pending",
@@ -342,24 +354,37 @@ export default function PaymentMethodPage() {
       const data = await res.json();
 
       if (data.transaction_status) {
+        let mappedStatus = data.transaction_status;
+
+        if (data.transaction_status === "capture") {
+          mappedStatus = "settlement";
+        }
+
+        if (data.transaction_status === "settlement") {
+          mappedStatus = "settlement";
+        }
+
+        if (data.transaction_status === "expire") {
+          mappedStatus = "expire";
+        }
+
+        if (data.transaction_status === "cancel") {
+          mappedStatus = "cancel";
+        }
+
+        if (data.transaction_status === "deny") {
+          mappedStatus = "deny";
+        }
+
         setSavedResult((prev) => ({
           ...prev!,
-          status: data.transaction_status,
+          status: mappedStatus,
         }));
 
-        // await fetch("/api/payment-sync", {
-        //   method: "POST",
-        //   body: JSON.stringify({
-        //     orderId: invoiceId,
-        //     uid: user!.uid,
-        //   }),
-        // });
-
-        // ✅ SYNC FIRESTORE
         await updateDoc(
           doc(firestore, "customer", user!.uid, "orders", invoiceId!),
           {
-            paymentStatus: data.transaction_status,
+            paymentStatus: mappedStatus,
           },
         );
       }
@@ -397,6 +422,50 @@ export default function PaymentMethodPage() {
   }, []);
 
   useEffect(() => {
+    if (!savedResult?.orderId) return;
+
+    const interval = setInterval(async () => {
+      const res = await fetch("/api/midtrans/status", {
+        method: "POST",
+        body: JSON.stringify({ orderId: savedResult.orderId }),
+      });
+
+      const data = await res.json();
+
+      if (data.transaction_status) {
+        let mappedStatus = data.transaction_status;
+
+        if (data.transaction_status === "capture") {
+          mappedStatus = "settlement";
+        }
+
+        if (data.transaction_status === "settlement") {
+          mappedStatus = "settlement";
+        }
+
+        if (data.transaction_status === "expire") {
+          mappedStatus = "expire";
+        }
+
+        if (data.transaction_status === "cancel") {
+          mappedStatus = "cancel";
+        }
+
+        if (data.transaction_status === "deny") {
+          mappedStatus = "deny";
+        }
+
+        setSavedResult((prev) => ({
+          ...prev!,
+          status: mappedStatus,
+        }));
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [savedResult?.orderId]);
+
+  useEffect(() => {
     console.log("CARD TYPE:", detectCardType(card.number));
   }, [card.number]);
 
@@ -427,8 +496,31 @@ export default function PaymentMethodPage() {
   // console.log(timeLeft);
   if (checkingDraft) return null;
 
-  /* ================= UI ================= */
+  /* ================= FINAL STATUS SCREEN ================= */
 
+  if (finalStatus === "settlement") {
+    return (
+      <SuccessScreen
+        amount={orders.reduce(
+          (t, o) =>
+            t +
+            o.products.reduce((s, p) => s + p.price * p.quantity, 0) +
+            o.deliveryFee,
+          0,
+        )}
+        orderId={invoiceId!}
+      />
+    );
+  }
+
+  if (finalStatus === "expire") {
+    return <ExpiredScreen />;
+  }
+
+  if (["cancel", "deny"].includes(finalStatus ?? "")) {
+    return <FailedScreen status={finalStatus!} />;
+  }
+  /* ================= UI ================= */
   return (
     <div className="container mx-auto max-w-6xl px-4 py-10">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
