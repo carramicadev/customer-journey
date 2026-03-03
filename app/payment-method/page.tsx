@@ -306,6 +306,7 @@ export default function PaymentMethodPage() {
     }
 
     await updateDoc(doc(firestore, "customer", user!.uid, "orders", draftId), {
+      order_Id: draftId,
       midtrans: {
         orderId: res.orderId ?? draftId,
         status: res.status ?? "pending",
@@ -346,13 +347,13 @@ export default function PaymentMethodPage() {
           status: data.transaction_status,
         }));
 
-        await fetch("/api/payment-sync", {
-          method: "POST",
-          body: JSON.stringify({
-            orderId: invoiceId,
-            uid: user!.uid,
-          }),
-        });
+        // await fetch("/api/payment-sync", {
+        //   method: "POST",
+        //   body: JSON.stringify({
+        //     orderId: invoiceId,
+        //     uid: user!.uid,
+        //   }),
+        // });
 
         // ✅ SYNC FIRESTORE
         await updateDoc(
