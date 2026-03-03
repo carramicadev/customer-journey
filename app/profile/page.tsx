@@ -217,8 +217,8 @@ const OrderHistoryPage: React.FC = () => {
   /* ================= UI ================= */
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-4 pb-12">
-      <div className="flex min-h-screen gap-4 bg-gray-100">
+    <div className="mx-auto max-w-7xl px-3 py-4 pb-12 lg:py-12">
+      <div className="flex min-h-screen gap-4 ">
         {/* MOBILE BUTTON */}
         <button
           className={`fixed left-8 top-1/2 z-50 -translate-y-1/2 rounded-r-lg bg-green-800 p-2 text-white transition-transform duration-300 ease-in-out md:hidden ${isSidebarOpen ? "translate-x-56" : "-translate-x-full"} z-40 md:relative md:flex-none md:translate-x-0`}
@@ -238,8 +238,8 @@ const OrderHistoryPage: React.FC = () => {
         {/* SIDEBAR */}
         <div
           className={`
-            fixed left-0 top-0 z-50  w-64 transform bg-white
-            shadow-xl transition-transform duration-300 ease-in-out
+            fixed left-0 top-0 z-50  w-64 border border-gray-200 bg-white shadow-sm
+            transition-transform duration-300 ease-in-out
             ${isSidebarOpen ? "h-full translate-x-0" : "-translate-x-full"}
             md:relative md:z-auto md:translate-x-0 md:rounded-2xl
           `}
@@ -282,7 +282,7 @@ const OrderHistoryPage: React.FC = () => {
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-1 space-y-6 rounded-2xl bg-white p-5 shadow-sm md:p-8">
+        <div className="flex-1 space-y-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:p-8">
           {/* TITLE */}
           <div className="border-b pb-4">
             <h2 className="text-2xl font-bold">{activeTab}</h2>
