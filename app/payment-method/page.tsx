@@ -359,7 +359,10 @@ export default function PaymentMethodPage() {
       if (data.transaction_status) {
         let mappedStatus = data.transaction_status;
 
-        if (data.transaction_status === "capture") {
+        if (
+          data.transaction_status === "capture" &&
+          data.fraud_status === "accept"
+        ) {
           mappedStatus = "settlement";
         }
 
@@ -426,6 +429,11 @@ export default function PaymentMethodPage() {
 
   useEffect(() => {
     if (!savedResult?.orderId) return;
+    if (
+      ["settlement", "expire", "cancel", "deny"].includes(savedResult.status)
+    ) {
+      return;
+    }
 
     const interval = setInterval(async () => {
       const res = await fetch("/api/midtrans/status", {
@@ -438,7 +446,10 @@ export default function PaymentMethodPage() {
       if (data.transaction_status) {
         let mappedStatus = data.transaction_status;
 
-        if (data.transaction_status === "capture") {
+        if (
+          data.transaction_status === "capture" &&
+          data.fraud_status === "accept"
+        ) {
           mappedStatus = "settlement";
         }
 
